@@ -1,0 +1,1299 @@
+<title>Matemática Visual</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&family=STIX+Two+Text:ital,wght@0,500;1,400;1,600&display=swap">
+<style>
+/* Layout: figura à esquerda e quadro à direita (como nas aulas em vídeo). No celular: figura, controles, quadro. */
+:root{
+  --bg:#000; --ink:#fff; --ink-dim:#cfcfcf; --line:#f2f2f2;
+  --red:#ff2a2a; --red-deep:#e50000;  /* destaque da interface */
+  --arc:#4fe3ff;   /* arco */
+  --ang:#ffd45e;   /* ângulo */
+  --res:#7dee9b;   /* resultado */
+  --ab:#ffd45e; --cd:#c4a6ff;  /* cordas */
+  --alt:#ff9ec9;   /* altura */
+  --panel:rgba(255,255,255,.08); --panel-line:rgba(255,255,255,.24);
+  --sans:'Open Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --math:'STIX Two Text',Cambria,'Times New Roman',serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{
+  background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.45;
+  padding-block:12px 24px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));
+  padding-right:max(16px,env(safe-area-inset-right,0px));
+}
+#bg{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none}
+.app{position:relative;z-index:1;max-width:1080px;margin:0 auto;display:grid;gap:14px}
+.top{display:grid;gap:10px}
+h1{margin:0;text-align:center;font-weight:600;font-size:clamp(18px,4.2vw,26px);text-wrap:balance}
+.tabs{display:flex;flex-wrap:nowrap;justify-content:safe center;gap:8px;overflow-x:auto;scrollbar-width:none;padding:4px 2px}
+.tabs::-webkit-scrollbar{display:none}
+@media (max-width:599px){h1{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}}
+.tab{flex:none;white-space:nowrap;min-height:44px;padding:0 16px;border-radius:999px;border:1px solid var(--panel-line);background:transparent;color:var(--ink-dim);font:600 15px var(--sans);cursor:pointer}
+.tab[aria-current="true"]{color:var(--ink);border-color:var(--red);background:rgba(255,42,42,.2)}
+button:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
+
+.stage{display:grid;gap:14px;grid-template-columns:minmax(0,1fr);grid-template-areas:"fig" "ctrl" "board"}
+@media (min-width:820px){
+  .stage{grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);grid-template-areas:"fig board" "fig ctrl";grid-template-rows:auto 1fr;align-items:start}
+}
+.fig{grid-area:fig;width:100%;max-width:560px;max-height:70vh;aspect-ratio:1;margin-inline:auto;border:1px solid var(--panel-line);border-radius:14px;background:rgba(255,255,255,.035)}
+.fig svg{width:100%;height:100%;display:block}
+
+.board{grid-area:board;display:grid;gap:12px;align-content:start;min-width:0}
+.sub{margin:0;font-family:var(--math);font-style:italic;font-size:clamp(24px,5.4vw,32px)}
+.say{margin:0;min-height:3.1em;font-size:clamp(16px,3.7vw,19px);color:var(--ink-dim);animation:rise .45s both}
+.lines{display:grid;gap:10px;justify-items:start}
+.line{font-family:var(--math);font-style:italic;font-size:clamp(25px,6.2vw,36px);line-height:1.25;animation:rise .5s both}
+.tag{font-family:var(--math);font-style:italic;font-size:clamp(20px,5vw,26px);padding:6px 24px;border-radius:10px;background:rgba(255,42,42,.2);border:1px solid rgba(255,42,42,.6);animation:rise .5s both}
+.frac{display:inline-grid;text-align:center;vertical-align:middle;line-height:1.15}
+.frac>span:first-child{border-bottom:2px solid var(--ink);padding:0 .25em .05em}
+.c-arc{color:var(--arc)} .c-ang{color:var(--ang)} .c-res{color:var(--res)} .c-ab{color:var(--ab)} .c-cd{color:var(--cd)}
+@keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+.ctrl{grid-area:ctrl;display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:10px;align-items:center}
+.btn{min-height:48px;padding:0 14px;border-radius:12px;border:1px solid var(--panel-line);background:var(--panel);color:var(--ink);font:600 15px var(--sans);cursor:pointer}
+.btn.main{background:var(--red-deep);color:#fff;border-color:transparent}
+.btn:disabled{opacity:.4;cursor:default}
+.groups .tab{font-size:14px;padding:0 12px;min-height:44px}
+@media (min-width:600px){.groups .tab{font-size:16px;padding:0 16px;min-height:46px}}
+.ln-ab2{stroke:var(--ab);stroke-width:3.4}
+.c-alt{color:var(--alt)}
+.ln-cd2{stroke:var(--cd);stroke-width:3.2}
+.ln-alt{stroke:var(--alt);stroke-width:3.2}
+.ln-arc2{stroke:var(--alt);stroke-width:7}
+.lbl.dim{fill:var(--ink-dim)}
+.ring-v{fill:none;stroke:var(--cd);stroke-width:3.5}
+.die-hi{fill:rgba(79,227,255,.26)}
+.lbl.sm{font-size:18px} .lbl.big{font-size:44px} .lbl.c-alt{fill:var(--alt)}
+.bag{fill:rgba(255,255,255,.07);stroke:var(--line);stroke-width:2.5}
+.ball-n{fill:rgba(255,255,255,.26);stroke:var(--line);stroke-width:1.5}
+.ball-r{fill:#ff5d6c}.ball-b{fill:#4a9bff}.ball-g{fill:#5be08b}
+.ring{fill:none;stroke:var(--ang);stroke-width:3.5}
+.ring-c{fill:none;stroke:var(--arc);stroke-width:2.5;stroke-dasharray:5 5}
+.die{fill:rgba(255,255,255,.1);stroke:var(--line);stroke-width:2.5}
+.tri{fill:rgba(255,255,255,.1);stroke:var(--line);stroke-width:2.5;stroke-linejoin:round}
+.dash-alt{fill:none;stroke:var(--alt);stroke-width:2.5;stroke-dasharray:6 6}
+.btn.extra{grid-column:1/-1;border-color:var(--ang);color:var(--ang)}
+.dots{display:flex;justify-content:center;flex-wrap:nowrap;min-width:0}
+.dot{flex:0 1 18px;min-width:9px;height:34px;padding:0;border:0;background:transparent;cursor:pointer;display:grid;place-items:center}
+.dot::before{content:"";width:10px;height:10px;border-radius:50%;background:rgba(255,255,255,.3)}
+.dot[aria-current="true"]::before{background:var(--red);box-shadow:0 0 0 4px rgba(255,42,42,.3)}
+
+/* figura */
+.el{opacity:0;transition:opacity .5s ease}
+.el.on{opacity:1}
+.draw{fill:none;stroke-dasharray:1;stroke-dashoffset:1;opacity:1;transition:stroke-dashoffset .9s ease}
+.draw.on{stroke-dashoffset:0}
+.circ{fill:url(#cg);stroke:var(--line);stroke-width:2.5}
+.ln{stroke:var(--line);stroke-width:2.5}
+.ln-arc{stroke:var(--arc);stroke-width:7}
+.ln-ang{stroke:var(--ang);stroke-width:2.8}
+.ln-ab{stroke:var(--ab);stroke-width:6}
+.ln-cd{stroke:var(--cd);stroke-width:6}
+.ln-res{stroke:var(--res);stroke-width:3}
+.dash{fill:none;stroke:var(--ang);stroke-width:2;stroke-dasharray:6 6}
+.wedge{fill:rgba(255,212,94,.24)}
+.pt{fill:var(--ink)}
+.lbl{font-family:var(--math);font-style:italic;font-size:24px;fill:var(--ink);text-anchor:middle;dominant-baseline:central;paint-order:stroke;stroke:#000;stroke-width:4px;stroke-linejoin:round}
+.lbl.c-arc{fill:var(--arc)} .lbl.c-ang{fill:var(--ang)} .lbl.c-res{fill:var(--res)} .lbl.c-ab{fill:var(--ab)} .lbl.c-cd{fill:var(--cd)}
+.grid{fill:none;stroke:rgba(255,255,255,.13);stroke-width:1}
+.ax{fill:none;stroke:var(--line);stroke-width:2}
+.fn{stroke:var(--red);stroke-width:4.5}
+.fn2{stroke:var(--arc);stroke-width:3.5}
+.lbl.c-red{fill:var(--red)} .c-red{color:var(--red)}
+.arw-x{fill:none;stroke:var(--alt);stroke-width:3.5}
+.glow2{stroke:rgba(255,255,255,.5);stroke-width:9;stroke-linecap:round}
+.glow{stroke:rgba(255,255,255,.5);stroke-width:15;stroke-linecap:round}
+.pt.hot{fill:var(--red)}
+.lbl.tk{font-size:13px;fill:var(--ink-dim);font-style:normal;stroke-width:3px}
+.setb{fill:rgba(255,255,255,.07);stroke:var(--line);stroke-width:2.5}
+.setb.hi{stroke:var(--ang);stroke-width:4;fill:rgba(255,212,94,.12)}
+.setb.hi2{stroke:var(--arc);stroke-width:4;fill:rgba(79,227,255,.1)}
+.arw-dim{fill:none;stroke:rgba(255,255,255,.28);stroke-width:1.5}
+.arw{fill:none;stroke:var(--red);stroke-width:3.5}
+.sq-arc{fill:rgba(79,227,255,.16);stroke:var(--arc);stroke-width:2.5;stroke-linejoin:round}
+.sq-cd{fill:rgba(196,166,255,.16);stroke:var(--cd);stroke-width:2.5;stroke-linejoin:round}
+.wall{fill:rgba(255,255,255,.12);stroke:var(--line);stroke-width:2.5}
+.tt{border-collapse:collapse;font-family:var(--math);font-size:19px;margin-top:4px}
+.tt th,.tt td{border:1px solid var(--panel-line);padding:4px 10px;text-align:center}
+.tt th{color:var(--red);font-weight:600}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+</style>
+
+<canvas id="bg" aria-hidden="true"></canvas>
+<main class="app">
+  <header class="top">
+    <nav class="tabs groups" id="groups" aria-label="Escolha a página"></nav>
+    <h1 id="title">Ângulos e cordas na circunferência</h1>
+    <nav class="tabs" id="tabs" aria-label="Escolha a cena"></nav>
+  </header>
+  <section class="stage">
+    <div class="fig">
+      <svg id="fig" viewBox="0 0 400 400" role="img" aria-label="Figura da circunferência">
+        <defs>
+          <radialGradient id="cg" cx="50%" cy="45%" r="60%">
+            <stop offset="0" stop-color="#ffffff" stop-opacity=".17"/>
+            <stop offset="1" stop-color="#ffffff" stop-opacity=".05"/>
+          </radialGradient>
+        </defs>
+        <g id="scene"></g>
+      </svg>
+    </div>
+    <div class="board">
+      <p class="sub" id="sub"></p>
+      <p class="say" id="say" aria-live="polite"></p>
+      <div class="lines" id="lines"></div>
+    </div>
+    <div class="ctrl">
+      <button class="btn" id="prev" aria-label="Passo anterior">←</button>
+      <div class="dots" id="dots"></div>
+      <button class="btn main" id="next">Próximo →</button>
+      <button class="btn extra" id="extra" hidden></button>
+    </div>
+  </section>
+</main>
+<script>
+const $=id=>document.getElementById(id);
+const NS='http://www.w3.org/2000/svg';
+const O={x:200,y:200,r:150};
+const rad=d=>d*Math.PI/180;
+const f=n=>Math.round(n*100)/100;
+const P=(deg,r=O.r)=>[O.x+r*Math.cos(rad(deg)),O.y-r*Math.sin(rad(deg))];
+const at=(v,deg,d)=>[v[0]+d*Math.cos(rad(deg)),v[1]-d*Math.sin(rad(deg))];
+const dirDeg=(a,b)=>Math.atan2(a[1]-b[1],b[0]-a[0])*180/Math.PI;
+const M=p=>f(p[0])+' '+f(p[1]);
+const lineD=(p,q)=>'M '+M(p)+' L '+M(q);
+/* arco anti-horário de a1 até a2 (graus), centro (cx,cy) */
+function arcD(a1,a2,r,cx=O.x,cy=O.y){
+  const s=((a2-a1)%360+360)%360;
+  const p1=[cx+r*Math.cos(rad(a1)),cy-r*Math.sin(rad(a1))];
+  const p2=[cx+r*Math.cos(rad(a1+s)),cy-r*Math.sin(rad(a1+s))];
+  return 'M '+M(p1)+' A '+r+' '+r+' 0 '+(s>180?1:0)+' 0 '+M(p2);
+}
+function sectD(a1,a2,r){
+  const s=((a2-a1)%360+360)%360, p1=P(a1,r), p2=P(a1+s,r);
+  return 'M '+O.x+' '+O.y+' L '+M(p1)+' A '+r+' '+r+' 0 '+(s>180?1:0)+' 0 '+M(p2)+' Z';
+}
+/* arco pequeno no vértice v, entre as direções para a e b */
+function angleAt(v,a,b,r){
+  let a1=dirDeg(v,a),a2=dirDeg(v,b),s=((a2-a1)%360+360)%360;
+  if(s>180){const t=a1;a1=a2;a2=t;s=360-s;}
+  return {d:arcD(a1,a1+s,r,v[0],v[1]),mid:a1+s/2};
+}
+function rightD(v,a,b,k){
+  const ua=[(a[0]-v[0]),(a[1]-v[1])],ub=[(b[0]-v[0]),(b[1]-v[1])];
+  const la=Math.hypot(...ua),lb=Math.hypot(...ub);
+  const p=[v[0]+ua[0]/la*k,v[1]+ua[1]/la*k],q=[p[0]+ub[0]/lb*k,p[1]+ub[1]/lb*k],r=[v[0]+ub[0]/lb*k,v[1]+ub[1]/lb*k];
+  return 'M '+M(p)+' L '+M(q)+' L '+M(r);
+}
+
+/* criação de elementos: s = passo em que aparece, e = passo em que some */
+let SC=$('scene');
+function mk(tag,attrs,s=0,e=99,cls=''){
+  const el=document.createElementNS(NS,tag);
+  for(const k in attrs)el.setAttribute(k,attrs[k]);
+  el.setAttribute('class',('el '+cls).trim());
+  el.dataset.s=s;el.dataset.e=e;SC.appendChild(el);return el;
+}
+const path=(d,s,cls,e)=>mk('path',{d,pathLength:1},s,e,'draw '+cls);
+const seg=(p,q,s,cls,e)=>path(lineD(p,q),s,cls,e);
+const dot=(p,s,e)=>mk('circle',{cx:f(p[0]),cy:f(p[1]),r:4.5},s,e,'pt');
+const txt=(p,t,s,cls,e)=>{const el=mk('text',{x:f(p[0]),y:f(p[1])},s,e,'lbl '+cls);el.textContent=t;return el;};
+const base=(s=0)=>mk('circle',{cx:O.x,cy:O.y,r:O.r},s,99,'circ');
+
+/* fundo: ondas de pontos, como no vídeo */
+function paintBg(){
+  const c=$('bg'),x=c.getContext('2d'),d=Math.min(window.devicePixelRatio||1,2);
+  const w=window.innerWidth,h=window.innerHeight;
+  c.width=w*d;c.height=h*d;x.setTransform(d,0,0,d,0,0);x.clearRect(0,0,w,h);
+  const g=x.createRadialGradient(w*.5,h*.38,0,w*.5,h*.38,Math.max(w,h)*.75);
+  g.addColorStop(0,'rgba(170,0,0,.38)');g.addColorStop(1,'rgba(0,0,0,0)');
+  x.fillStyle=g;x.fillRect(0,0,w,h);
+  let seed=7;const rnd=()=>(seed=(seed*16807)%2147483647)/2147483647;
+  const step=Math.max(6,w/150);
+  for(let r=0;r<34;r++){
+    const t=r/33;
+    for(let px=-step;px<=w+step;px+=step){
+      const u=px/w;
+      const y=h*(.52+.2*Math.sin(u*5.4+t*1.6)+.08*Math.sin(u*11+t*3))+(t-.5)*h*.34;
+      const a=.1+.38*Math.pow(Math.sin(Math.PI*t),1.4)*rnd();
+      x.fillStyle=rnd()>.9?'rgba(255,255,255,'+a+')':'rgba(255,40,40,'+a+')';
+      x.beginPath();x.arc(px+rnd()*3,y+rnd()*3,.7+rnd()*.9,0,6.283);x.fill();
+    }
+  }
+  for(let i=0;i<24;i++){
+    x.fillStyle='rgba(255,60,60,'+(.03+rnd()*.07)+')';
+    x.beginPath();x.arc(rnd()*w,rnd()*h,4+rnd()*12,0,6.283);x.fill();
+  }
+}
+paintBg();
+let rz;window.addEventListener('resize',()=>{clearTimeout(rz);rz=setTimeout(paintBg,150);});
+const F=(a,b)=>'<span class="frac"><span>'+a+'</span><span>'+b+'</span></span>';
+const arcS='<span class="c-arc">arco</span>';
+const SCENES=[];
+
+SCENES.push({id:'central',tab:'Central',sub:'Ângulo central',
+  build(){
+    const A=P(30),B=P(110),Oc=[O.x,O.y];
+    base();
+    dot(Oc,0);txt([O.x+16,O.y+18],'O',0);
+    dot(A,1);dot(B,1);txt(at(A,30,22),'A',1);txt(at(B,110,22),'B',1);
+    path(arcD(30,110,150),2,'ln-arc');
+    txt(P(70,180),'80°',2,'c-arc');
+    mk('path',{d:sectD(30,110,150)},3,99,'wedge');
+    seg(Oc,A,3,'ln-ang');seg(Oc,B,3,'ln-ang');
+    path(arcD(30,110,34),3,'ln-ang');
+    txt(P(70,62),'α',3,'c-ang',5);
+    txt(P(70,62),'80°',5,'c-res');
+  },
+  steps:[
+    {say:'Esta é uma circunferência. O ponto O é o centro.'},
+    {say:'Marque dois pontos nela: A e B.'},
+    {say:'O pedaço da circunferência entre A e B é o arco AB. Aqui ele mede 80°.'},
+    {say:'Ligue A e B ao centro. O ângulo entre os dois raios é o ângulo central.'},
+    {say:'Regra: o ângulo central mede o mesmo que o arco.',
+     add:['<span class="c-ang">α</span> = '+arcS]},
+    {say:'Agora com os números.',
+     add:['T:Exemplo','<span class="c-arc">arco AB</span> = 80°','<span class="c-ang">α</span> = <span class="c-res">80°</span>']}
+  ]});
+
+SCENES.push({id:'inscrito',tab:'Inscrito',sub:'Ângulo inscrito',
+  build(){
+    const A=P(30),B=P(110),C=P(250),Oc=[O.x,O.y];
+    base();
+    dot(A,0);dot(B,0);txt(at(A,30,22),'A',0);txt(at(B,110,22),'B',0);
+    path(arcD(30,110,150),0,'ln-arc');txt(P(70,180),'80°',0,'c-arc');
+    dot(C,1);txt(at(C,250,22),'C',1);
+    seg(C,A,2,'ln-ang');seg(C,B,2,'ln-ang');
+    const g=angleAt(C,A,B,40);path(g.d,2,'ln-ang');
+    txt(at(C,g.mid,78),'θ',2,'c-ang',5);txt(at(C,g.mid,78),'40°',5,'c-res');
+    dot(Oc,3);txt([O.x+16,O.y+18],'O',3);
+    mk('path',{d:lineD(Oc,A)},3,99,'dash');mk('path',{d:lineD(Oc,B)},3,99,'dash');
+    mk('path',{d:arcD(30,110,34)},3,99,'dash');
+    txt(P(70,64),'80°',3,'c-ang');
+  },
+  steps:[
+    {say:'Usamos o mesmo arco AB, de 80°.',add:['<span class="c-arc">arco AB = 80°</span>']},
+    {say:'Agora marque um ponto C do outro lado da circunferência.'},
+    {say:'Ligue C a A e a B. O ângulo em C é o ângulo inscrito.'},
+    {say:'Compare: o ângulo central desse arco mede 80°. O ângulo em C é bem menor.'},
+    {say:'Regra: o ângulo inscrito mede a metade do arco.',
+     add:['<span class="c-ang">θ</span> = '+F(arcS,'2')]},
+    {say:'Agora com os números.',
+     add:['T:Exemplo','<span class="c-ang">θ</span> = '+F('80°','2'),'<span class="c-ang">θ</span> = <span class="c-res">40°</span>']}
+  ]});
+let placeC=null,cDeg=70,cIdx=0,tw=0;
+SCENES.push({id:'diametro',tab:'Diâmetro',sub:'Ângulo no diâmetro',
+  extra:{label:'Mover o ponto C',show:s=>s>=4,
+    click(){
+      const to=[70,125,28,150][++cIdx%4],from=cDeg,t0=performance.now();
+      cancelAnimationFrame(tw);
+      const run=now=>{const k=Math.min(1,(now-t0)/700),e=k*k*(3-2*k);cDeg=from+(to-from)*e;placeC&&placeC(cDeg);if(k<1)tw=requestAnimationFrame(run);};
+      tw=requestAnimationFrame(run);
+    }},
+  build(){
+    cDeg=70;cIdx=0;cancelAnimationFrame(tw);
+    const A=P(180),B=P(0),Oc=[O.x,O.y];
+    base();
+    seg(A,B,0,'ln');
+    dot(Oc,0);txt([O.x,O.y+22],'O',0);
+    dot(A,0);dot(B,0);txt(at(A,180,22),'A',0);txt(at(B,0,22),'B',0);
+    path(arcD(180,360,150),1,'ln-arc');txt(P(270,178),'180°',1,'c-arc');
+    const cA=seg(A,A,2,'ln-ang'),cB=seg(B,B,2,'ln-ang');
+    const cDot=dot(A,2),cLbl=txt(A,'C',2);
+    const rm=path('M 0 0',3,'ln-res'),rl=txt(A,'90°',3,'c-res');
+    placeC=deg=>{
+      const C=P(deg),L=P(deg,172),g=angleAt(C,A,B,1),m=at(C,g.mid,40);
+      cDot.setAttribute('cx',f(C[0]));cDot.setAttribute('cy',f(C[1]));
+      cLbl.setAttribute('x',f(L[0]));cLbl.setAttribute('y',f(L[1]));
+      cA.setAttribute('d',lineD(C,A));cB.setAttribute('d',lineD(C,B));
+      rm.setAttribute('d',rightD(C,A,B,15));
+      rl.setAttribute('x',f(m[0]));rl.setAttribute('y',f(m[1]));
+    };
+    placeC(cDeg);
+  },
+  steps:[
+    {say:'AB é um diâmetro: uma corda que passa pelo centro O.'},
+    {say:'Ele divide a circunferência em dois arcos de 180°.',add:['<span class="c-arc">arco AB = 180°</span>']},
+    {say:'Marque um ponto C no outro arco e ligue C a A e a B.'},
+    {say:'O ângulo em C é inscrito: mede a metade do arco.',
+     add:['<span class="c-ang">θ</span> = '+F('180°','2'),'<span class="c-ang">θ</span> = <span class="c-res">90°</span>']},
+    {say:'Mova o ponto C e veja: o ângulo continua 90°.',add:['<span class="c-res">sempre 90°</span>']}
+  ]});
+
+SCENES.push({id:'cordas',tab:'Cordas',sub:'Cordas que se cruzam',
+  build(){
+    const s=O.r/7,Oc=[O.x,O.y];
+    const Q=(x,y)=>[O.x+x*s,O.y-y*s];
+    const u1=[.2,Math.sqrt(.96)],u2=[-.5,Math.sqrt(3)/2];
+    const mv=(u,t)=>Q(5+t*u[0],t*u[1]);
+    const A=mv(u1,-6),B=mv(u1,4),C=mv(u2,-3),D=mv(u2,8),Pp=Q(5,0);
+    const out=(p,t,d)=>txt(at(p,dirDeg(Oc,p),d),t,0);
+    base();
+    seg(A,B,0,'ln');seg(C,D,1,'ln');
+    seg(Pp,A,2,'ln-ab');seg(Pp,B,2,'ln-ab');seg(Pp,C,3,'ln-cd');seg(Pp,D,3,'ln-cd');
+    dot(A,0);dot(B,0);dot(C,1);dot(D,1);dot(Pp,1);
+    [[A,'A',0],[B,'B',0],[C,'C',1],[D,'D',1]].forEach(([p,t,st])=>txt(at(p,dirDeg(Oc,p),22),t,st));
+    txt(at(Pp,20,17),'P',1);
+    const lab=(end,t,deg,cls,st,e)=>txt(at([(Pp[0]+end[0])/2,(Pp[1]+end[1])/2],deg,19),t,st,cls,e);
+    lab(A,'6',168,'c-ab',5);lab(B,'4',-12,'c-ab',5);lab(C,'3',30,'c-cd',5);
+    lab(D,'x',210,'c-cd',5,6);lab(D,'8',210,'c-res',6);
+  },
+  steps:[
+    {say:'AB é uma corda: um segmento que liga dois pontos da circunferência.'},
+    {say:'CD é outra corda. As duas se cruzam no ponto P.'},
+    {say:'P divide a corda AB em dois pedaços: PA e PB.'},
+    {say:'P divide a corda CD em dois pedaços: PC e PD.'},
+    {say:'Regra: pedaço × pedaço de uma corda é igual a pedaço × pedaço da outra.',
+     add:['<span class="c-ab">PA</span> × <span class="c-ab">PB</span> = <span class="c-cd">PC</span> × <span class="c-cd">PD</span>']},
+    {say:'Exemplo: PA = 6, PB = 4 e PC = 3. Quanto vale PD? Chame de x.',
+     add:['T:Exemplo','<span class="c-ab">6 × 4</span> = <span class="c-cd">3 × x</span>']},
+    {say:'Calcule: 24 dividido por 3.',
+     add:['24 = 3 × x','x = '+F('24','3')+' = <span class="c-res">8</span>']}
+  ]});
+const GROUPS=[
+  {id:'circ',name:'Circunferência',title:'Ângulos e cordas na circunferência'},
+  {id:'tri',name:'Triângulo',title:'Triângulo retângulo inscrito'},
+  {id:'met',name:'Métricas',title:'Relações métricas no triângulo retângulo'},
+  {id:'trig',name:'Trigonometria',title:'Trigonometria no triângulo retângulo'},
+  {id:'quad',name:'Quadriláteros',title:'Quadriláteros inscritos'},
+  {id:'prob',name:'Probabilidade',title:'Probabilidade'},
+  {id:'fun',name:'Funções',title:'Relações e funções'}
+];
+
+/* ponto P fora da circunferência (raio 5, escala 18, centro em x=150) */
+const EX=21,CX=130;
+const Qx=(x,y)=>[CX+x*EX,O.y-y*EX];
+const ray=(p,th,t)=>Qx(p[0]+t*Math.cos(rad(th)),p[1]+t*Math.sin(rad(th)));
+const circX=()=>mk('circle',{cx:CX,cy:O.y,r:5*EX},0,99,'circ');
+const radial=p=>dirDeg([CX,O.y],p);
+/* colchete de medida de p até q, afastado de "away"; devolve o ponto do meio */
+function dim(p,q,off,away,cls,s,e){
+  const dx=q[0]-p[0],dy=q[1]-p[1],L=Math.hypot(dx,dy),m=[(p[0]+q[0])/2,(p[1]+q[1])/2];
+  let n=[-dy/L,dx/L];
+  const d1=Math.hypot(m[0]+n[0]*10-away[0],m[1]+n[1]*10-away[1]);
+  const d2=Math.hypot(m[0]-n[0]*10-away[0],m[1]-n[1]*10-away[1]);
+  if(d2>d1)n=[-n[0],-n[1]];
+  const a=[p[0]+n[0]*off,p[1]+n[1]*off],b=[q[0]+n[0]*off,q[1]+n[1]*off];
+  path('M '+M(p)+' L '+M(a)+' L '+M(b)+' L '+M(q),s,cls,e);
+  return [(a[0]+b[0])/2+n[0]*14,(a[1]+b[1])/2+n[1]*14];
+}
+
+SCENES.push({id:'secantes',tab:'Secantes',sub:'Relação entre secantes',
+  build(){
+    const d=Math.sqrt(43),Pm=[d,0];
+    const t1=Math.acos(-5.5/d)*180/Math.PI,t2=-Math.acos(-4.5/d)*180/Math.PI;
+    const Pp=Qx(d,0),A=ray(Pm,t1,2),B=ray(Pm,t1,9),C=ray(Pm,t2,3),D=ray(Pm,t2,6);
+    circX();
+    seg(Pp,B,0,'ln');seg(Pp,D,1,'ln');
+    dot(Pp,0);txt(at(Pp,0,18),'P',0);
+    dot(A,0);dot(B,0);txt(at(A,radial(A)+180,26),'A',0);txt(at(B,radial(B),22),'B',0);
+    dot(C,1);dot(D,1);txt(at(C,radial(C)+180,26),'C',1);txt(at(D,radial(D),22),'D',1);
+    const lb=(m,t,cls,s,e,sm)=>txt(m,t,s,cls+(sm?' sm':''),e);
+    let m=dim(Pp,A,24,D,'ln-ab2',2);lb(m,'PA','c-ab',2,5,1);lb(m,'2','c-ab',5);
+    m=dim(Pp,B,9,D,'ln-ab2',2);lb(m,'PB','c-ab',2,5,1);lb(m,'9','c-ab',5);
+    m=dim(Pp,C,24,B,'ln-cd2',3);lb(m,'PC','c-cd',3,5,1);lb(m,'3','c-cd',5);
+    m=dim(Pp,D,9,B,'ln-cd2',3);lb(m,'PD','c-cd',3,5,1);lb(m,'x','c-cd',5,6);lb(m,'6','c-res',6);
+  },
+  steps:[
+    {say:'P está fora da circunferência. A reta que sai de P e corta em A e B é uma secante.'},
+    {say:'Outra secante sai de P e corta a circunferência em C e D.'},
+    {say:'Meça de P até cada ponto da primeira secante: PA e PB.'},
+    {say:'Faça o mesmo na segunda: PC e PD.'},
+    {say:'Regra: pedaço × pedaço de uma secante é igual ao da outra.',
+     add:['<span class="c-ab">PA</span> · <span class="c-ab">PB</span> = <span class="c-cd">PC</span> · <span class="c-cd">PD</span>']},
+    {say:'Exemplo: PA = 2, PB = 9 e PC = 3. Quanto vale PD? Chame de x.',
+     add:['T:Exemplo','<span class="c-ab">2 · 9</span> = <span class="c-cd">3 · x</span>']},
+    {say:'Calcule: 18 dividido por 3.',
+     add:['18 = 3 · x','x = '+F('18','3')+' = <span class="c-res">6</span>']}
+  ]});
+
+SCENES.push({id:'tangente',tab:'Secante e tangente',sub:'Secante e tangente',
+  build(){
+    const d=Math.sqrt(61),Pm=[d,0];
+    const ts=-Math.acos(-6.5/d)*180/Math.PI,tt=180-Math.asin(5/d)*180/Math.PI;
+    const Pp=Qx(d,0),A=ray(Pm,ts,4),B=ray(Pm,ts,9),C=ray(Pm,tt,6);
+    circX();
+    seg(Pp,B,0,'ln');
+    dot(Pp,0);txt(at(Pp,0,18),'P',0);
+    dot(A,0);dot(B,0);txt(at(A,radial(A)+180,26),'A',0);txt(at(B,radial(B),22),'B',0);
+    seg(Pp,C,1,'ln-cd2');dot(C,1);txt(at(C,radial(C),22),'C',1);
+    const lb=(m,t,cls,s,e,sm)=>txt(m,t,s,cls+(sm?' sm':''),e);
+    let m=dim(Pp,A,24,C,'ln-ab2',2);lb(m,'PA','c-ab',2,4,1);lb(m,'4','c-ab',4);
+    m=dim(Pp,B,9,C,'ln-ab2',2);lb(m,'PB','c-ab',2,4,1);lb(m,'9','c-ab',4);
+    m=dim(Pp,C,9,B,'ln-cd2',2);lb(m,'PC','c-cd',2,4,1);lb(m,'?','c-cd',4,5);lb(m,'6','c-res',5);
+  },
+  steps:[
+    {say:'P está fora da circunferência. A reta que corta em A e B é uma secante.'},
+    {say:'A reta que encosta em um só ponto, C, é uma tangente.'},
+    {say:'Meça de P até A, de P até B e de P até C.'},
+    {say:'Regra: pedaço × pedaço da secante é igual ao quadrado da tangente.',
+     add:['<span class="c-ab">PA</span> · <span class="c-ab">PB</span> = (<span class="c-cd">PC</span>)<sup>2</sup>']},
+    {say:'Exemplo: PA = 4 e PB = 9. Quanto vale PC?',
+     add:['T:Exemplo','<span class="c-ab">4 · 9</span> = (<span class="c-cd">PC</span>)<sup>2</sup>']},
+    {say:'Calcule: 36 é o quadrado de quem? A raiz de 36.',
+     add:['36 = (<span class="c-cd">PC</span>)<sup>2</sup>','PC = √36 = <span class="c-res">6</span>']}
+  ]});
+/* triângulo retângulo inscrito: catetos 6 e 8, hipotenusa 10, raio 5 (escala 30) */
+const Tt=(x,y)=>[O.x+x*30,O.y-y*30];
+const triPts=()=>({A:Tt(-5,0),B:Tt(5,0),C:Tt(-1.4,4.8),H:Tt(-1.4,0),Oc:[O.x,O.y]});
+const triDraw=(s)=>{
+  const {A,B,C}=triPts();
+  mk('path',{d:'M '+M(A)+' L '+M(B)+' L '+M(C)+' Z'},0,99,'tri');
+  path(rightD(C,A,B,16),0,'ln-ang');
+  txt(at(A,180,22),'A',0);txt(at(B,0,22),'B',0);txt(at(C,dirDeg([O.x,O.y],C),22),'C',0);
+};
+
+SCENES.push({id:'hipotenusa',grp:'tri',tab:'Hipotenusa',sub:'Hipotenusa e diâmetro',
+  build(){
+    const {A,B,C,Oc}=triPts();
+    base(1);triDraw();
+    seg(A,B,2,'ln-cd');
+    dot(Oc,2);txt([O.x,O.y+22],'O',2);
+    txt([O.x,O.y+54],'hipotenusa = diâmetro',2,'c-cd sm',5);txt([O.x,O.y+54],'10',5,'c-cd');
+    mk('path',{d:lineD(Oc,C)},3,99,'dash');
+    [[[125,216],3],[[275,216],3],[[190,126],3]].forEach(([p,s])=>{txt(p,'R',s,'c-ang sm',6);txt(p,'5',6,'c-res');});
+    txt([86,124],'6',5);txt([274,118],'8',5);
+  },
+  steps:[
+    {say:'Este triângulo ABC é retângulo: o ângulo de 90° está em C.'},
+    {say:'Agora desenhe a circunferência que passa por A, B e C.'},
+    {say:'A hipotenusa AB passa pelo centro O. Ela é um diâmetro.',
+     add:['<span class="c-cd">hipotenusa</span> = diâmetro']},
+    {say:'O centro O é o meio da hipotenusa: OA, OB e OC são o raio R.'},
+    {say:'Regra: o raio é a metade da hipotenusa.',
+     add:['R = '+F('<span class="c-cd">hipotenusa</span>','2')]},
+    {say:'Exemplo: os catetos medem 6 e 8. Primeiro ache a hipotenusa por Pitágoras.',
+     add:['T:Exemplo','AB<sup>2</sup> = 6<sup>2</sup> + 8<sup>2</sup>','AB = √100 = <span class="c-cd">10</span>']},
+    {say:'Agora o raio é a metade de 10.',
+     add:['R = '+F('10','2')+' = <span class="c-res">5</span>']}
+  ]});
+
+SCENES.push({id:'altura',grp:'tri',tab:'Altura',sub:'Altura no triângulo retângulo',
+  build(){
+    const {A,B,C,H}=triPts(),Cl=Tt(-1.4,-4.8),y2=O.y+16;
+    base();triDraw();
+    seg(C,H,0,'ln-alt');dot(H,0);txt([H[0]+14,H[1]-14],'H',0);
+    txt([H[0]-18,(C[1]+H[1])/2],'h',0,'c-alt',4);txt([H[0]-18,(C[1]+H[1])/2],'?',4,'c-alt',5);txt([H[0]-30,(C[1]+H[1])/2],'4,8',5,'c-res');
+    path('M '+M(A)+' L '+A[0]+' '+y2+' L '+H[0]+' '+y2+' L '+M(H),1,'ln-ab2');
+    path('M '+M(H)+' L '+H[0]+' '+y2+' L '+B[0]+' '+y2+' L '+M(B),1,'ln-ab2');
+    const mA=[(A[0]+H[0])/2,y2+20],nB=[(H[0]+B[0])/2,y2+20];
+    txt(mA,'m',1,'c-ab',4);txt(mA,'3,6',4,'c-ab');txt(nB,'n',1,'c-ab',4);txt(nB,'6,4',4,'c-ab');
+    mk('path',{d:lineD(H,Cl)},3,99,'dash-alt');dot(Cl,3);txt(at(Cl,dirDeg([O.x,O.y],Cl),22),'C′',3);
+  },
+  steps:[
+    {say:'Mesmo triângulo inscrito. Trace a altura h, de C até a hipotenusa.'},
+    {say:'A altura divide a hipotenusa em dois pedaços: m e n.'},
+    {say:'Regra: a altura ao quadrado é igual a m × n.',
+     add:['<span class="c-alt">h</span><sup>2</sup> = <span class="c-ab">m</span> · <span class="c-ab">n</span>']},
+    {say:'Por quê? Prolongue h até o outro lado: são duas cordas que se cruzam em H.'},
+    {say:'Exemplo: m = 3,6 e n = 6,4. Quanto vale h?',
+     add:['T:Exemplo','<span class="c-alt">h</span><sup>2</sup> = <span class="c-ab">3,6 · 6,4</span>']},
+    {say:'Calcule: 3,6 × 6,4 = 23,04. Depois tire a raiz.',
+     add:['<span class="c-alt">h</span><sup>2</sup> = 23,04','h = √23,04 = <span class="c-res">4,8</span>']}
+  ]});
+/* probabilidade */
+SCENES.push({id:'sorteio',grp:'prob',tab:'Sorteio',sub:'Probabilidade de um sorteio',
+  build(){
+    const cols=['r','r','r','b','b','b','b','b','g','g'];
+    const pos=i=>[60+70*(i%5),150+100*Math.floor(i/5)];
+    mk('rect',{x:20,y:95,width:360,height:210,rx:26},0,99,'bag');
+    txt([200,66],'sacola',0,'sm');
+    cols.forEach((c,i)=>{
+      const p=pos(i);
+      mk('circle',{cx:p[0],cy:p[1],r:28},0,1,'ball-n');
+      mk('circle',{cx:p[0],cy:p[1],r:28},1,99,'ball-'+c);
+    });
+    cols.forEach((c,i)=>{if(c==='r'){const p=pos(i);mk('circle',{cx:p[0],cy:p[1],r:36},2,99,'ring');}});
+    cols.forEach((c,i)=>{const p=pos(i);mk('circle',{cx:p[0],cy:p[1],r:32},3,99,'ring-c');});
+    txt([200,338],'10 bolas',0,'sm',1);
+    txt([200,338],'3 vermelhas · 5 azuis · 2 verdes',1,'sm');
+  },
+  steps:[
+    {say:'Uma sacola tem 10 bolas.'},
+    {say:'São 3 vermelhas, 5 azuis e 2 verdes.'},
+    {say:'Queremos sortear uma bola vermelha. Casos favoráveis: as 3 vermelhas.',
+     add:['<span class="c-ang">favoráveis</span> = 3']},
+    {say:'Casos possíveis: todas as bolas da sacola.',
+     add:['<span class="c-arc">possíveis</span> = 10']},
+    {say:'Regra: probabilidade é favoráveis dividido por possíveis.',
+     add:['P = '+F('<span class="c-ang">favoráveis</span>','<span class="c-arc">possíveis</span>')]},
+    {say:'Agora com os números.',
+     add:['T:Exemplo','P(vermelha) = '+F('3','10'),'P = 0,3 = <span class="c-res">30%</span>']}
+  ]});
+
+SCENES.push({id:'dado',grp:'prob',tab:'Dado',sub:'Probabilidade com um dado',
+  build(){
+    const xs=[45,155,265],ys=[95,205];
+    for(let i=0;i<6;i++){
+      const x=xs[i%3],y=ys[Math.floor(i/3)];
+      mk('rect',{x,y,width:90,height:90,rx:16},0,99,'die');
+      txt([x+45,y+46],String(i+1),0,'big');
+      if(i%2===1)mk('rect',{x:x-5,y:y-5,width:100,height:100,rx:20},1,99,'ring');
+    }
+    txt([200,338],'6 faces',0,'sm',1);
+    txt([200,338],'pares: 2, 4 e 6',1,'c-ang sm');
+  },
+  steps:[
+    {say:'Um dado tem 6 faces: 1, 2, 3, 4, 5 e 6.'},
+    {say:'Queremos tirar um número par: 2, 4 ou 6.'},
+    {say:'Casos favoráveis: 3. Casos possíveis: 6.',
+     add:['<span class="c-ang">favoráveis</span> = 3','<span class="c-arc">possíveis</span> = 6']},
+    {say:'Divida os favoráveis pelos possíveis.',
+     add:['P(par) = '+F('3','6')+' = '+F('1','2'),'P = 0,5 = <span class="c-res">50%</span>']}
+  ]});
+/* árvore de probabilidades: 3 vermelhas (V) e 2 azuis (A) */
+const TR={r:[40,200],a:[150,110],b:[150,290],aa:[270,65],ab:[270,155],ba:[270,245],bb:[270,335]};
+const elab=(p,q,t,s,e)=>txt([(p[0]+q[0])/2-6,(p[1]+q[1])/2+(q[1]<p[1]?-15:17)],t,s,'sm',e);
+function buildTree(c){
+  const T=TR;
+  [[T.r,T.a,0],[T.r,T.b,0],[T.a,T.aa,c.sTop],[T.a,T.ab,c.sTop],[T.b,T.ba,c.sBot],[T.b,T.bb,c.sBot]].forEach(([p,q,s])=>seg(p,q,s,'ln'));
+  seg(T.r,T.a,c.hi,'ln-ab2');seg(T.a,T.aa,c.hi,'ln-ab2');
+  const node=(p,col,l,s)=>{mk('circle',{cx:p[0],cy:p[1],r:17},s,99,'ball-'+col);txt(p,l,s,'sm');};
+  mk('circle',{cx:T.r[0],cy:T.r[1],r:18},0,99,'ball-n');
+  node(T.a,'r','V',0);node(T.b,'b','A',0);
+  node(T.aa,'r','V',c.sTop);node(T.ab,'b','A',c.sTop);node(T.ba,'r','V',c.sBot);node(T.bb,'b','A',c.sBot);
+  txt([40,28],'sacola',0,'dim sm');txt([150,28],'1º sorteio',0,'dim sm');txt([270,28],'2º sorteio',c.sTop,'dim sm');
+  elab(T.r,T.a,c.l1[0],0);elab(T.r,T.b,c.l1[1],0);
+  elab(T.a,T.aa,c.top[0],c.sTop);elab(T.a,T.ab,c.top[1],c.sTop);
+  elab(T.b,T.ba,c.bot[0],c.sBot);elab(T.b,T.bb,c.bot[1],c.sBot);
+  txt([348,65],c.res,c.sRes,'c-res');
+}
+
+SCENES.push({id:'sucessivas',grp:'prob',tab:'Sucessivas',sub:'Sorteios sucessivos',
+  build(){buildTree({l1:['3/5','2/5'],top:['3/5','2/5'],bot:['3/5','2/5'],sTop:1,sBot:1,hi:2,res:'9/25',sRes:4});},
+  steps:[
+    {say:'Uma sacola tem 3 bolas vermelhas (V) e 2 azuis (A). Sorteamos uma bola.'},
+    {say:'Anotamos a cor e devolvemos a bola. O 2º sorteio fica igual ao 1º.'},
+    {say:'Queremos vermelha no 1º sorteio e vermelha no 2º. Siga esse caminho.'},
+    {say:'Regra: em sorteios sucessivos, multiplique as probabilidades do caminho.',
+     add:['P(V e V) = P(V) · P(V)']},
+    {say:'Exemplo: 3 em 5 no 1º sorteio e 3 em 5 no 2º.',
+     add:['T:Exemplo','P = '+F('3','5')+' · '+F('3','5'),'P = '+F('9','25')+' = 0,36 = <span class="c-res">36%</span>']}
+  ]});
+
+SCENES.push({id:'semreposicao',grp:'prob',tab:'Sem reposição',sub:'Sorteios sem reposição',
+  build(){buildTree({l1:['3/5','2/5'],top:['2/4','2/4'],bot:['3/4','1/4'],sTop:1,sBot:2,hi:3,res:'3/10',sRes:4});},
+  steps:[
+    {say:'Agora a bola sorteada não volta. A sacola tem 3 V e 2 A.'},
+    {say:'Se saiu vermelha, restam 2 V e 2 A: são 4 bolas.'},
+    {say:'Se saiu azul, restam 3 V e 1 A: também são 4 bolas.'},
+    {say:'Vermelha no 1º e vermelha no 2º: siga esse caminho.'},
+    {say:'Multiplique as frações do caminho. A 2ª já considera o que saiu antes.',
+     add:['T:Exemplo','P(V e V) = '+F('3','5')+' · '+F('2','4'),'P = '+F('6','20')+' = 0,3 = <span class="c-res">30%</span>']}
+  ]});
+SCENES.push({id:'condicional',grp:'prob',tab:'Condicional',sub:'Probabilidade condicional',
+  build(){
+    const cols=['r','r','r','b','b'],px=i=>60+70*i;
+    mk('rect',{x:20,y:150,width:360,height:100,rx:26},0,99,'bag');
+    txt([200,126],'sacola',0,'dim sm');
+    cols.forEach((c,i)=>{
+      if(i>0){mk('circle',{cx:px(i),cy:200,r:28},0,99,'ball-'+c);return;}
+      mk('circle',{cx:px(0),cy:200,r:28},0,1,'ball-r');
+      mk('circle',{cx:px(0),cy:200,r:28},1,99,'ball-n');
+      mk('circle',{cx:px(0),cy:66,r:28},1,99,'ball-r');
+      txt([175,66],'1ª bola: evento A',1,'sm');
+    });
+    mk('rect',{x:96,y:158,width:280,height:84,rx:18},2,99,'ring-c');
+    txt([236,282],'restam 4 bolas',2,'c-arc sm');
+    [1,2].forEach(i=>mk('circle',{cx:px(i),cy:200,r:35},3,99,'ring'));
+  },
+  steps:[
+    {say:'A sacola tem 3 bolas vermelhas e 2 azuis. Sorteamos duas bolas, sem devolver.'},
+    {say:'A 1ª bola saiu vermelha. Chame esse fato de A.'},
+    {say:'Agora só restam 4 bolas: 2 vermelhas e 2 azuis.'},
+    {say:'B é a 2ª bola ser vermelha. Entre as 4 que restam, 2 são vermelhas.',
+     add:['<span class="c-ang">favoráveis</span> = 2','<span class="c-arc">possíveis</span> = 4']},
+    {say:'Essa é a probabilidade condicional: a chance de B, sabendo que A já aconteceu.',
+     add:['P(B | A) = '+F('2','4')+' = <span class="c-res">1/2</span>']},
+    {say:'Outra forma: divida P(A e B) por P(A).',
+     add:['T:Conferindo','P(B | A) = '+F('P(A e B)','P(A)'),'P(B | A) = '+F('3/10','3/5')+' = <span class="c-res">1/2</span>']}
+  ]});
+const eA='<span class="c-ab">A</span>',eB='<span class="c-cd">B</span>';
+SCENES.push({id:'excludentes',grp:'prob',tab:'Excludentes',sub:'Eventos mutuamente excludentes',
+  build(){
+    const xs=[45,155,265],ys=[95,205];
+    for(let i=0;i<6;i++){
+      const x=xs[i%3],y=ys[Math.floor(i/3)];
+      mk('rect',{x,y,width:90,height:90,rx:16},0,99,'die');
+      if(i<2||i>3)mk('rect',{x,y,width:90,height:90,rx:16},5,99,'die-hi');
+      txt([x+45,y+46],String(i+1),0,'big');
+      if(i<2)mk('rect',{x:x-5,y:y-5,width:100,height:100,rx:20},1,99,'ring');
+      if(i>3)mk('rect',{x:x-5,y:y-5,width:100,height:100,rx:20},2,99,'ring-v');
+    }
+    txt([120,338],'A = {1, 2}',1,'c-ab sm');
+    txt([280,338],'B = {5, 6}',2,'c-cd sm');
+  },
+  steps:[
+    {say:'Um dado tem 6 faces. Vamos olhar dois eventos ao mesmo tempo.'},
+    {say:'A: sair um número menor que 3. São as faces 1 e 2.',add:[eA+' = {1, 2}']},
+    {say:'B: sair um número maior que 4. São as faces 5 e 6.',add:[eB+' = {5, 6}']},
+    {say:'A e B não têm nenhuma face em comum. Os dois nunca acontecem juntos: são mutuamente excludentes.',
+     add:['P('+eA+' e '+eB+') = 0']},
+    {say:'Regra: se os eventos são mutuamente excludentes, some as probabilidades.',
+     add:['P('+eA+' ou '+eB+') = P('+eA+') + P('+eB+')']},
+    {say:'Exemplo: cada evento tem 2 faces em 6. Ao todo, 4 faces servem para A ou B.',
+     add:['T:Exemplo','P('+eA+') = '+F('2','6')+'     P('+eB+') = '+F('2','6'),
+          'P('+eA+' ou '+eB+') = '+F('2','6')+' + '+F('2','6')+' = '+F('4','6')+' = <span class="c-res">2/3</span>']}
+  ]});
+/* quadrilátero inscrito ABCD: arcos AB=100°, BC=60°, CD=80°, DA=120° → α=70°, β=100°, γ=110°, δ=80° */
+const QA=[90,190,250,330],QP=QA.map(a=>P(a)),QL=['A','B','C','D'];
+function quadDraw(){
+  base();
+  mk('path',{d:'M '+QP.map(M).join(' L ')+' Z'},0,99,'tri');
+  QP.forEach((p,i)=>{dot(p,0);txt(at(p,QA[i],22),QL[i],0);});
+}
+const qAng=(i,r)=>{
+  const v=QP[i],g=angleAt(v,QP[(i+3)%4],QP[(i+1)%4],r);
+  return {d:g.d,pos:at(v,g.mid,r+30)};
+};
+const aS='<span class="c-ang">α</span>',gS='<span class="c-ang">γ</span>';
+const arcBCD='<span class="c-arc">arco BCD</span>',arcDAB='<span class="c-alt">arco DAB</span>';
+
+SCENES.push({id:'opostos',grp:'quad',tab:'Ângulos opostos',sub:'Quadrilátero inscrito',
+  build(){
+    quadDraw();
+    const a=qAng(0,34),b=qAng(1,34),c=qAng(2,34),d=qAng(3,34);
+    path(arcD(190,330,150),2,'ln-arc');path(arcD(330,190,150),2,'ln-arc2');
+    txt(P(285,178),'arco BCD',2,'c-arc sm');txt(P(30,178),'arco DAB',2,'c-alt sm');
+    path(a.d,1,'ln-ang');txt(a.pos,'α',1,'c-ang',6);txt(a.pos,'70°',6,'c-res');
+    path(c.d,1,'ln-ang');txt(c.pos,'γ',1,'c-ang',6);txt(c.pos,'110°',6,'c-res');
+    path(b.d,5,'ln-cd2');txt(b.pos,'β',5,'c-cd');
+    path(d.d,5,'ln-cd2');txt(d.pos,'δ',5,'c-cd');
+  },
+  steps:[
+    {say:'Um quadrilátero inscrito tem os 4 vértices na circunferência.'},
+    {say:'Vamos medir os ângulos de dentro. α (em A) e γ (em C) são opostos.'},
+    {say:'Os dois são inscritos: cada um mede a metade do arco que “enxerga”.',
+     add:[aS+' = '+F(arcBCD,'2'),gS+' = '+F(arcDAB,'2')]},
+    {say:'Os dois arcos juntos formam a circunferência inteira: 360°.',
+     add:[arcBCD+' + '+arcDAB+' = 360°']},
+    {say:'Então α + γ é a metade de 360°.',
+     add:[aS+' + '+gS+' = '+F('360°','2')+' = <span class="c-res">180°</span>']},
+    {say:'Regra: os ângulos opostos de um quadrilátero inscrito somam 180°. Vale também para β e δ.',
+     add:['<span class="c-cd">β</span> + <span class="c-cd">δ</span> = <span class="c-res">180°</span>']},
+    {say:'Exemplo: se α = 70°, quanto vale γ?',
+     add:['T:Exemplo','γ = 180° − 70°','γ = <span class="c-res">110°</span>']}
+  ]});
+
+SCENES.push({id:'externo',grp:'quad',tab:'Ângulo externo',sub:'Ângulo externo',
+  build(){
+    quadDraw();
+    const B=QP[1],C=QP[2],D=QP[3],A=QP[0];
+    const E=[C[0]+.42*(C[0]-B[0]),C[1]+.42*(C[1]-B[1])];
+    mk('path',{d:lineD(C,E)},0,99,'dash-alt');
+    const ex=angleAt(C,E,D,34),ci=angleAt(C,B,D,34),ai=angleAt(A,QP[3],QP[1],34);
+    path(ex.d,1,'ln-alt');
+    txt(at(C,ex.mid,58),'ε',1,'c-alt',5);txt(at(C,ex.mid,58),'70°',5,'c-res');
+    path(ci.d,2,'ln-ang');txt(at(C,ci.mid,62),'γ',2,'c-ang');
+    path(ai.d,3,'ln-ang');txt(at(A,ai.mid,64),'α',3,'c-ang',5);txt(at(A,ai.mid,64),'70°',5,'c-res');
+  },
+  steps:[
+    {say:'Prolongue o lado BC para além de C (linha tracejada).'},
+    {say:'O ângulo entre o prolongamento e o lado CD é o ângulo externo ε.'},
+    {say:'ε e γ formam uma reta: somam 180°.',
+     add:['<span class="c-alt">ε</span> + '+gS+' = 180°']},
+    {say:'Mas α + γ também é 180°. Então ε é igual a α.',
+     add:[aS+' + '+gS+' = 180°','<span class="c-alt">ε</span> = '+aS]},
+    {say:'Regra: o ângulo externo é igual ao ângulo interno oposto.',
+     add:['<span class="c-res">externo = interno oposto</span>']},
+    {say:'Exemplo: se α = 70°, o ângulo externo em C também vale 70°.',
+     add:['T:Exemplo','ε = α = <span class="c-res">70°</span>']}
+  ]});
+/* ===== novos módulos: métricas, trigonometria, funções ===== */
+const HIP='<span class="c-cd">hipotenusa</span>',OPO='<span class="c-ab">oposto</span>',ADJ='<span class="c-arc">adjacente</span>';
+const minus=v=>String(v).replace('-','\u2212');
+/* seta de p até q */
+function arrD(p,q,h=9){
+  const a=Math.atan2(q[1]-p[1],q[0]-p[0]);
+  const h1=[q[0]-h*Math.cos(a-.45),q[1]-h*Math.sin(a-.45)],h2=[q[0]-h*Math.cos(a+.45),q[1]-h*Math.sin(a+.45)];
+  return lineD(p,q)+' M '+M(h1)+' L '+M(q)+' L '+M(h2);
+}
+/* dois conjuntos (diagrama de flechas) */
+function sets(An,Bn,s0=0){
+  const ys=n=>n===3?[110,200,290]:[85,160,240,315];
+  const ya=ys(An.length),yb=ys(Bn.length),AX=100,BX=300;
+  mk('ellipse',{cx:AX,cy:200,rx:62,ry:140},s0,99,'setb');
+  mk('ellipse',{cx:BX,cy:200,rx:62,ry:140},s0,99,'setb');
+  txt([AX,36],'A',s0,'c-ang');txt([BX,36],'B',s0,'c-ang');
+  An.forEach((v,i)=>txt([AX,ya[i]],v,s0));
+  Bn.forEach((v,i)=>txt([BX,yb[i]],v,s0));
+  return {pa:i=>[AX+18,ya[i]],pb:j=>[BX-20,yb[j]],ya,yb,AX,BX};
+}
+/* plano cartesiano: unidade 36, origem no centro */
+const U=36,Pl=(x,y)=>[200+x*U,200-y*U];
+function plane(){
+  for(let i=-5;i<=5;i++){
+    if(i===0)continue;
+    mk('path',{d:lineD(Pl(i,-5),Pl(i,5))},0,99,'grid');
+    mk('path',{d:lineD(Pl(-5,i),Pl(5,i))},0,99,'grid');
+    txt([Pl(i,0)[0],Pl(i,0)[1]+13],minus(i),0,'tk');
+    txt([Pl(0,i)[0]-11,Pl(0,i)[1]],minus(i),0,'tk');
+  }
+  path(lineD(Pl(-5,0),Pl(5,0)),0,'ax');path(lineD(Pl(0,-5),Pl(0,5)),0,'ax');
+  txt([Pl(5,0)[0]-9,Pl(5,0)[1]-14],'x',0,'sm');txt([Pl(0,5)[0]+14,Pl(0,5)[1]+8],'y',0,'sm');
+}
+const curve=(fn,x0,x1,s,cls,e)=>{
+  let d='';
+  for(let x=x0;x<=x1+1e-9;x+=.1){const y=fn(x);d+=(d?' L ':'M ')+M(Pl(x,y));}
+  return path(d,s,cls,e);
+};
+const hot=(p,s,e)=>{const c=dot(p,s,e);c.classList.add('hot');c.setAttribute('r',6.5);return c;};
+
+/* ===== relações métricas ===== */
+/* triângulo 6-8-10, ângulo reto em A, hipotenusa BC na horizontal (escala 32) */
+const Tm=(x,y)=>[200+x*32,255-y*32];
+const mPts=()=>({A:Tm(-1.4,4.8),B:Tm(-5,0),C:Tm(5,0),H:Tm(-1.4,0)});
+const mTri=()=>{
+  const {A,B,C}=mPts();
+  mk('path',{d:'M '+M(A)+' L '+M(B)+' L '+M(C)+' Z'},0,99,'tri');
+  path(rightD(A,B,C,14),0,'ln-ang');
+  txt([A[0]-4,A[1]-20],'A',0);txt([B[0]-4,B[1]+20],'B',0);txt([C[0]+4,C[1]+20],'C',0);
+};
+/* colchete embaixo da hipotenusa entre x1 e x2 (em unidades) na altura y */
+const mBr=(x1,x2,y,s,cls,e)=>path('M '+f(200+x1*32)+' '+(y-9)+' L '+f(200+x1*32)+' '+y+' L '+f(200+x2*32)+' '+y+' L '+f(200+x2*32)+' '+(y-9),s,cls,e);
+const mLb={a:[255,232],b:[282,146],c:[92,160],h:[172,176],m:[200-3.2*32,290],n:[200+2.7*32+8,290]};
+const mm=[(-5+-1.4)/2,(-1.4+5)/2];
+const sp=(c,t)=>'<span class="'+c+'">'+t+'</span>';
+
+SCENES.push({id:'elementos',grp:'met',tab:'Elementos',sub:'Os elementos do triângulo retângulo',
+  build(){
+    const {A,B,C,H}=mPts();
+    mTri();
+    seg(B,C,1,'ln-cd');txt(mLb.a,'a',1,'c-cd');
+    seg(A,B,2,'ln-arc');seg(A,C,2,'ln-arc');txt(mLb.c,'c',2,'c-arc');txt(mLb.b,'b',2,'c-arc');
+    seg(A,H,3,'ln-alt');dot(H,3);txt(mLb.h,'h',3,'c-alt');
+    mBr(-5,-1.4,270,4,'ln-ab2');mBr(-1.4,5,270,4,'ln-ab2');
+    txt([200+mm[0]*32,292],'m',4,'c-ab');txt([200+mm[1]*32,292],'n',4,'c-ab');
+  },
+  steps:[
+    {say:'Triângulo retângulo ABC: o ângulo de 90° está em A.'},
+    {say:'O lado oposto ao ângulo reto é a hipotenusa: o maior lado. Chame de a.',
+     add:[sp('c-cd','a')+' = hipotenusa']},
+    {say:'Os outros dois lados são os catetos: b e c.',
+     add:[sp('c-arc','b')+' e '+sp('c-arc','c')+' = catetos']},
+    {say:'Trace a altura h, de A até a hipotenusa. Ela forma outro ângulo reto.',
+     add:[sp('c-alt','h')+' = altura']},
+    {say:'A altura divide a hipotenusa em dois pedaços. m é a projeção do cateto c; n é a projeção do cateto b.',
+     add:[sp('c-ab','m')+' e '+sp('c-ab','n')+' = projeções dos catetos']},
+    {say:'Os dois pedaços juntos formam a hipotenusa inteira.',
+     add:[sp('c-cd','a')+' = '+sp('c-ab','m')+' + '+sp('c-ab','n'),'T:Exemplo','10 = 3,6 + 6,4']}
+  ]});
+
+SCENES.push({id:'catetos',grp:'met',tab:'Catetos',sub:'Cateto ao quadrado',
+  build(){
+    const {A,B,C,H}=mPts();
+    mTri();
+    seg(A,B,1,'ln-arc',5);txt(mLb.c,'c',1,'c-arc',5);
+    mBr(-5,-1.4,270,1,'ln-ab2',5);txt([200+mm[0]*32,292],'m',1,'c-ab',5);
+    seg(A,C,5,'ln-arc');txt(mLb.b,'b',5,'c-arc');
+    mBr(-1.4,5,270,5,'ln-ab2');txt([200+mm[1]*32,292],'n',5,'c-ab');
+    mBr(-5,5,318,2,'ln-cd2');txt([200,340],'a',2,'c-cd');
+    seg(A,H,0,'dash-alt');
+  },
+  steps:[
+    {say:'Vamos achar o cateto c. Ele encosta na hipotenusa no ponto B.'},
+    {say:'A projeção de c sobre a hipotenusa é o pedaço m.',
+     add:['projeção de '+sp('c-arc','c')+' = '+sp('c-ab','m')]},
+    {say:'E a hipotenusa inteira é a.'},
+    {say:'Regra: o cateto ao quadrado é a hipotenusa vezes a projeção dele.',
+     add:[sp('c-arc','c')+'<sup>2</sup> = '+sp('c-cd','a')+' · '+sp('c-ab','m')]},
+    {say:'Exemplo: a = 10 e m = 3,6. Quanto vale c?',
+     add:['T:Exemplo',sp('c-arc','c')+'<sup>2</sup> = 10 · 3,6 = 36',sp('c-arc','c')+' = √36 = '+sp('c-res','6')]},
+    {say:'Mesma ideia para o cateto b: a projeção dele é n.',
+     add:[sp('c-arc','b')+'<sup>2</sup> = '+sp('c-cd','a')+' · '+sp('c-ab','n'),sp('c-arc','b')+'<sup>2</sup> = 10 · 6,4 = 64','b = √64 = '+sp('c-res','8')]}
+  ]});
+
+SCENES.push({id:'altura-m',grp:'met',tab:'Altura',sub:'A altura e os produtos',
+  build(){
+    const {A,B,C,H}=mPts();
+    mTri();
+    seg(A,H,0,'ln-alt');dot(H,0);txt(mLb.h,'h',0,'c-alt');
+    mBr(-5,-1.4,270,0,'ln-ab2');mBr(-1.4,5,270,0,'ln-ab2');
+    txt([200+mm[0]*32,292],'m',0,'c-ab');txt([200+mm[1]*32,292],'n',0,'c-ab');
+    seg(B,C,3,'ln-cd');txt(mLb.a,'a',3,'c-cd');
+    seg(A,B,3,'ln-arc');seg(A,C,3,'ln-arc');txt(mLb.c,'c',3,'c-arc');txt(mLb.b,'b',3,'c-arc');
+  },
+  steps:[
+    {say:'A altura h cai na hipotenusa e a divide em m e n.'},
+    {say:'Regra 1: a altura ao quadrado é igual a m vezes n.',
+     add:[sp('c-alt','h')+'<sup>2</sup> = '+sp('c-ab','m')+' · '+sp('c-ab','n')]},
+    {say:'Exemplo: m = 3,6 e n = 6,4. Quanto vale h?',
+     add:['T:Exemplo',sp('c-alt','h')+'<sup>2</sup> = 3,6 · 6,4 = 23,04',sp('c-alt','h')+' = √23,04 = '+sp('c-res','4,8')]},
+    {say:'Regra 2: hipotenusa vezes altura é igual a cateto vezes cateto.',
+     add:[sp('c-cd','a')+' · '+sp('c-alt','h')+' = '+sp('c-arc','b')+' · '+sp('c-arc','c')]},
+    {say:'Confira com os números: a = 10, b = 8 e c = 6.',
+     add:['T:Exemplo','10 · '+sp('c-alt','h')+' = 8 · 6','10 · '+sp('c-alt','h')+' = 48','h = '+F('48','10')+' = '+sp('c-res','4,8')]}
+  ]});
+
+/* quadrado construído sobre o segmento pq, para o lado oposto a ref */
+function sqOn(p,q,ref,cls,s,e){
+  const dx=q[0]-p[0],dy=q[1]-p[1],mid=[(p[0]+q[0])/2,(p[1]+q[1])/2];
+  let nx=-dy,ny=dx;
+  if((ref[0]-mid[0])*nx+(ref[1]-mid[1])*ny>0){nx=-nx;ny=-ny;}
+  const p2=[p[0]+nx,p[1]+ny],q2=[q[0]+nx,q[1]+ny];
+  mk('path',{d:'M '+M(p)+' L '+M(q)+' L '+M(q2)+' L '+M(p2)+' Z'},s,e,cls);
+  return [(p[0]+q2[0])/2,(p[1]+q2[1])/2];
+}
+SCENES.push({id:'pitagoras',grp:'met',tab:'Pitágoras',sub:'Teorema de Pitágoras com quadrados',
+  build(){
+    const T=(x,y)=>[200+x*14,205-y*14];
+    const A=T(-1.4,4.8),B=T(-5,0),C=T(5,0);
+    mk('path',{d:'M '+M(A)+' L '+M(B)+' L '+M(C)+' Z'},0,99,'tri');
+    path(rightD(A,B,C,10),0,'ln-ang');
+    const c1=sqOn(B,A,C,'sq-arc',1);txt(c1,'6² = 36',1,'sm');
+    const c2=sqOn(A,C,B,'sq-arc',2);txt(c2,'8² = 64',2,'sm');
+    const c3=sqOn(B,C,A,'sq-cd',3);txt(c3,'10² = 100',3,'sm');
+  },
+  steps:[
+    {say:'Triângulo retângulo com catetos 6 e 8. Vamos construir um quadrado em cada lado.'},
+    {say:'Quadrado sobre o cateto c = 6: a área dele é 6 × 6 = 36.',
+     add:['área de '+sp('c-arc','c')+' = 6<sup>2</sup> = 36']},
+    {say:'Quadrado sobre o cateto b = 8: a área dele é 8 × 8 = 64.',
+     add:['área de '+sp('c-arc','b')+' = 8<sup>2</sup> = 64']},
+    {say:'Quadrado sobre a hipotenusa a = 10: a área dele é 10 × 10 = 100.',
+     add:['área de '+sp('c-cd','a')+' = 10<sup>2</sup> = 100']},
+    {say:'Pitágoras: a área do quadrado grande é a soma das áreas dos dois menores.',
+     add:[sp('c-cd','a')+'<sup>2</sup> = '+sp('c-arc','b')+'<sup>2</sup> + '+sp('c-arc','c')+'<sup>2</sup>']},
+    {say:'Confira: 36 + 64 dá exatamente 100.',
+     add:['T:Exemplo','100 = 64 + 36 ✓']}
+  ]});
+
+/* ===== trigonometria ===== */
+const tB=[50,300],tC=[338,300],tA=[338,84];
+const tTri=()=>{
+  mk('path',{d:'M '+M(tA)+' L '+M(tB)+' L '+M(tC)+' Z'},0,99,'tri');
+  path(rightD(tC,tB,tA,16),0,'ln-ang');
+  txt([tB[0]-6,tB[1]+20],'B',0);txt([tC[0]+14,tC[1]+20],'C',0);txt([tA[0]+14,tA[1]-14],'A',0);
+};
+const TL={hip:[150,166],op:[298,190],adj:[194,326]};
+
+SCENES.push({id:'lados',grp:'trig',tab:'Os lados',sub:'Hipotenusa, cateto oposto e adjacente',
+  build(){
+    tTri();
+    const al=angleAt(tB,tC,tA,36),be=angleAt(tA,tB,tC,30);
+    path(al.d,1,'ln-ang',5);txt(at(tB,al.mid,60),'α',1,'c-ang',5);
+    seg(tB,tA,2,'ln-cd');txt(TL.hip,'hipotenusa',2,'c-cd sm');
+    seg(tC,tA,3,'ln-ab',5);txt(TL.op,'oposto',3,'c-ab sm',5);
+    seg(tB,tC,4,'ln-arc',5);txt(TL.adj,'adjacente',4,'c-arc sm',5);
+    path(be.d,5,'ln-ang');txt(at(tA,be.mid,52),'β',5,'c-ang');
+    seg(tC,tA,5,'ln-arc');txt(TL.op,'adjacente',5,'c-arc sm');
+    seg(tB,tC,5,'ln-ab');txt(TL.adj,'oposto',5,'c-ab sm');
+  },
+  steps:[
+    {say:'Triângulo retângulo: o ângulo de 90° está em C.'},
+    {say:'Escolha um dos ângulos agudos. Aqui é o ângulo α, em B.',
+     add:['ângulo escolhido: <span class="c-ang">α</span>']},
+    {say:'A hipotenusa é sempre o lado oposto ao ângulo reto.',
+     add:[HIP+' = lado oposto ao ângulo de 90°']},
+    {say:'O cateto oposto fica de frente para α, sem encostar nele.',
+     add:['cateto '+OPO+' = de frente para <span class="c-ang">α</span>']},
+    {say:'O cateto adjacente encosta em α: é o cateto vizinho dele.',
+     add:['cateto '+ADJ+' = encosta em <span class="c-ang">α</span>']},
+    {say:'Cuidado: se escolher o outro ângulo, β, oposto e adjacente trocam de lugar.',
+     add:['oposto e adjacente <span class="c-res">dependem do ângulo</span>']}
+  ]});
+
+SCENES.push({id:'razoes',grp:'trig',tab:'Sen · cos · tan',sub:'Seno, cosseno e tangente',
+  build(){
+    tTri();
+    const al=angleAt(tB,tC,tA,36);
+    const gl=(p,q,k)=>seg(p,q,k,'glow',k+1);
+    gl(tC,tA,1);gl(tB,tA,1);gl(tB,tC,2);gl(tB,tA,2);gl(tC,tA,3);gl(tB,tC,3);
+    path(al.d,0,'ln-ang');txt(at(tB,al.mid,60),'α',0,'c-ang');
+    seg(tB,tA,0,'ln-cd');seg(tC,tA,0,'ln-ab');seg(tB,tC,0,'ln-arc');
+    txt(TL.hip,'hipotenusa',0,'c-cd sm',5);txt(TL.op,'oposto',0,'c-ab sm',5);txt(TL.adj,'adjacente',0,'c-arc sm',5);
+    txt([TL.hip[0]+6,TL.hip[1]],'10',5,'c-cd');txt([TL.op[0]+14,TL.op[1]],'6',5,'c-ab');txt(TL.adj,'8',5,'c-arc');
+  },
+  steps:[
+    {say:'Seno, cosseno e tangente são divisões entre dois lados do triângulo.'},
+    {say:'Seno de α: cateto oposto dividido pela hipotenusa.',
+     add:['sen <span class="c-ang">α</span> = '+F(OPO,HIP)]},
+    {say:'Cosseno de α: cateto adjacente dividido pela hipotenusa.',
+     add:['cos <span class="c-ang">α</span> = '+F(ADJ,HIP)]},
+    {say:'Tangente de α: cateto oposto dividido pelo cateto adjacente.',
+     add:['tg <span class="c-ang">α</span> = '+F(OPO,ADJ)]},
+    {say:'Macete: SOH – CAH – TOA. Seno = Oposto/Hipotenusa, Cosseno = Adjacente/Hipotenusa, Tangente = Oposto/Adjacente.',
+     add:['<span class="c-res">SOH · CAH · TOA</span>']},
+    {say:'Exemplo: oposto 6, adjacente 8 e hipotenusa 10.',
+     add:['T:Exemplo','sen α = '+F('6','10')+' = <span class="c-res">0,6</span>','cos α = '+F('8','10')+' = <span class="c-res">0,8</span>','tg α = '+F('6','8')+' = <span class="c-res">0,75</span>']}
+  ]});
+
+SCENES.push({id:'notaveis',grp:'trig',tab:'Ângulos notáveis',sub:'30°, 45° e 60°',
+  build(){
+    /* 45°: metade de um quadrado de lado 1 */
+    const B=[90,300],C=[260,300],A=[260,130];
+    mk('path',{d:'M '+M(A)+' L '+M(B)+' L '+M(C)+' Z'},0,3,'tri');
+    path(rightD(C,B,A,14),0,'ln-ang',3);
+    const a1=angleAt(B,C,A,34),a2=angleAt(A,B,C,34);
+    path(a1.d,1,'glow2',3);
+    seg(C,A,1,'glow',3);seg(B,A,1,'glow',2);seg(B,C,2,'glow',3);
+    path(a1.d,0,'ln-ang',3);txt(at(B,a1.mid,62),'45°',0,'c-ang sm',3);
+    path(a2.d,0,'ln-ang',3);txt(at(A,a2.mid,56),'45°',0,'c-ang sm',3);
+    txt([175,324],'1',0,'c-arc',3);txt([286,215],'1',0,'c-ab',3);txt([138,192],'√2',0,'c-cd',3);
+    /* 30° e 60°: metade de um triângulo equilátero de lado 2 */
+    const b=[60,310],c=[302.5,310],a=[302.5,170];
+    mk('path',{d:'M '+M(a)+' L '+M(b)+' L '+M(c)+' Z'},3,99,'tri');
+    path(rightD(c,b,a,14),3,'ln-ang');
+    const b1=angleAt(b,c,a,40),b2=angleAt(a,b,c,26);
+    path(b1.d,4,'glow2',5);path(b2.d,5,'glow2',6);
+    path(b1.d,3,'ln-ang');txt(at(b,b1.mid,78),'30°',3,'c-ang sm');
+    path(b2.d,3,'ln-ang');txt(at(a,b2.mid,46),'60°',3,'c-ang sm');
+    txt([181,332],'√3',3,'c-arc');txt([326,240],'1',3,'c-ab');txt([148,214],'2',3,'c-cd');
+  },
+  steps:[
+    {say:'Ângulo de 45°: é meio quadrado de lado 1. Os catetos valem 1 e a hipotenusa é √2 (Pitágoras).',
+     add:['1<sup>2</sup> + 1<sup>2</sup> = 2','hipotenusa = <span class="c-cd">√2</span>']},
+    {say:'Use SOH – CAH: oposto 1 e hipotenusa √2. Racionalizando, fica √2/2.',
+     add:['sen 45° = '+F('1','√2')+' = '+F('√2','2'),'cos 45° = '+F('√2','2')]},
+    {say:'Tangente: oposto 1 dividido por adjacente 1.',
+     add:['tg 45° = '+F('1','1')+' = <span class="c-res">1</span>']},
+    {say:'Ângulos de 30° e 60°: é meio triângulo equilátero de lado 2. Hipotenusa 2, cateto 1 e cateto √3.',
+     add:['hipotenusa = <span class="c-cd">2</span>','cateto menor = <span class="c-ab">1</span>','cateto maior = <span class="c-arc">√3</span>']},
+    {say:'Para 30°: o oposto é 1 e o adjacente é √3.',
+     add:['sen 30° = '+F('1','2'),'cos 30° = '+F('√3','2'),'tg 30° = '+F('1','√3')+' = '+F('√3','3')]},
+    {say:'Para 60° os papéis trocam: o oposto agora é √3 e o adjacente é 1.',
+     add:['sen 60° = '+F('√3','2'),'cos 60° = '+F('1','2'),'tg 60° = '+F('√3','1')+' = √3']},
+    {say:'Tabela para guardar: o seno de um ângulo é o cosseno do outro (30° e 60°).',
+     add:['<table class="tt"><tr><th></th><th>30°</th><th>45°</th><th>60°</th></tr><tr><th>sen</th><td>½</td><td>√2/2</td><td>√3/2</td></tr><tr><th>cos</th><td>√3/2</td><td>√2/2</td><td>½</td></tr><tr><th>tg</th><td>√3/3</td><td>1</td><td>√3</td></tr></table>']}
+  ]});
+
+SCENES.push({id:'escada',grp:'trig',tab:'Aplicação',sub:'Escada apoiada na parede',
+  build(){
+    const b=[60,310],c=[302.5,310],a=[302.5,170];
+    mk('rect',{x:302.5,y:130,width:50,height:180},0,99,'wall');
+    path(lineD([20,310],[380,310]),0,'ax');
+    seg(b,a,0,'ln-cd');txt([148,214],'10 m',0,'c-cd');
+    const b1=angleAt(b,c,a,40);
+    path(b1.d,0,'ln-ang');txt(at(b,b1.mid,78),'30°',0,'c-ang sm');
+    seg(c,a,1,'ln-ab');txt([278,242],'h',1,'c-ab',3);txt([274,242],'5 m',3,'c-res');
+    seg(b,c,4,'ln-arc');txt([181,336],'x',4,'c-arc',5);txt([181,336],'8,7 m',5,'c-res');
+  },
+  steps:[
+    {say:'Uma escada de 10 m está apoiada na parede e forma 30° com o chão. Qual a altura que ela alcança?'},
+    {say:'A escada é a hipotenusa. A altura h é o cateto oposto ao ângulo de 30°.',
+     add:['hipotenusa = 10','h = cateto '+OPO]},
+    {say:'Temos o oposto e a hipotenusa: use o seno.',
+     add:['sen 30° = '+F(sp('c-ab','h'),'10')]},
+    {say:'Sabemos que sen 30° = 1/2. Agora é só resolver.',
+     add:['T:Exemplo',F('1','2')+' = '+F('h','10'),'h = 10 · '+F('1','2')+' = <span class="c-res">5 m</span>']},
+    {say:'E a distância x do pé da escada até a parede? É o cateto adjacente: use o cosseno.',
+     add:['cos 30° = '+F(sp('c-arc','x'),'10')]},
+    {say:'cos 30° = √3/2. Então x = 10 · √3/2 = 5√3, cerca de 8,7 m.',
+     add:['x = 10 · '+F('√3','2')+' = 5√3 ≈ <span class="c-res">8,7 m</span>']}
+  ]});
+
+/* ===== relações e funções ===== */
+const cA=v=>sp('c-ab',v),cB=v=>sp('c-arc',v),cC=v=>sp('c-cd',v);
+SCENES.push({id:'binaria',grp:'fun',tab:'Relação binária',sub:'Relação binária',
+  build(){
+    const A=[1,2,3],B=[2,3,4],S=sets(A,B);
+    A.forEach((x,i)=>B.forEach((y,j)=>{
+      path(arrD(S.pa(i),S.pb(j)),1,'arw-dim');
+      if(y>x)path(arrD(S.pa(i),S.pb(j)),(x===1&&y===3)?3:4,'arw');
+    }));
+    path(arrD(S.pa(2),S.pb(0)),3,'arw-x',4);
+    mk('ellipse',{cx:S.AX,cy:200,rx:62,ry:140},5,99,'setb hi');
+    mk('ellipse',{cx:S.BX,cy:200,rx:62,ry:140},5,99,'setb hi2');
+    txt([200,36],'R',4,'c-res');
+  },
+  steps:[
+    {say:'Dois conjuntos: A = {1, 2, 3} e B = {2, 3, 4}.',
+     add:['A = {1, 2, 3}','B = {2, 3, 4}']},
+    {say:'O produto cartesiano A × B reúne todos os pares (x, y), com x em A e y em B: 3 × 3 = 9 pares.',
+     add:['A × B = <span class="c-ab">9 pares</span>']},
+    {say:'Uma relação binária R é um grupo de pares escolhidos por uma regra. Regra: y > x.',
+     add:['R = {(x, y) ∈ A × B | <span class="c-red">y &gt; x</span>}']},
+    {say:'Teste cada par na regra. O par (1, 3) passa: 3 > 1. O par (3, 2) não passa: 2 não é maior que 3.',
+     add:['T:Testando os pares','(1, 3) → 3 &gt; 1 ✓ <span class="c-res">entra</span>','(3, 2) → 2 &gt; 3 ✗ <span class="c-alt">fica de fora</span>']},
+    {say:'Fazendo o teste com todos os pares, sobram só os que passam. Eles formam a relação R.',
+     add:['R = {(1,2), (1,3), (1,4), (2,3), (2,4), (3,4)}']},
+    {say:'Domínio: os x que participam da relação. Imagem: os y que recebem alguma seta.',
+     add:['D(R) = {1, 2, 3}','Im(R) = {2, 3, 4}']}
+  ]});
+
+SCENES.push({id:'funcao',grp:'fun',tab:'Função',sub:'O que é uma função',
+  build(){
+    const A=[1,2,3],B=[2,4,5,6],S=sets(A,B);
+    [[0,0,1],[1,1,2],[2,3,3]].forEach(([i,j,k])=>path(arrD(S.pa(i),S.pb(j)),k,'arw'));
+    mk('ellipse',{cx:S.AX,cy:200,rx:62,ry:140},5,99,'setb hi');
+    mk('ellipse',{cx:S.BX,cy:200,rx:62,ry:140},6,7,'setb hi2');
+    [0,1,3].forEach(j=>mk('circle',{cx:S.BX,cy:S.yb[j],r:22},7,99,'ring'));
+    path(arrD(S.pa(1),S.pb(2)),8,'arw-x');
+    txt([200,370],'2 tem duas setas!',8,'c-alt sm');
+    txt([200,36],'f',0,'c-res');
+  },
+  steps:[
+    {say:'A regra f(x) = 2x diz o que fazer: pegue o número x de A e multiplique por 2.',
+     add:['f(x) = <span class="c-res">2x</span>']},
+    {say:'Para x = 1, substitua na regra: 2 vezes 1 dá 2. Uma seta liga 1 ao 2.',
+     add:['T:Passo a passo','f(1) = 2 · 1 = <span class="c-res">2</span>']},
+    {say:'Para x = 2: 2 vezes 2 dá 4.',
+     add:['f(2) = 2 · 2 = <span class="c-res">4</span>']},
+    {say:'Para x = 3: 2 vezes 3 dá 6.',
+     add:['f(3) = 2 · 3 = <span class="c-res">6</span>']},
+    {say:'Função é uma relação em que todo elemento de A tem exatamente uma seta saindo dele.',
+     add:['cada <span class="c-ab">x</span> tem <span class="c-red">um único</span> <span class="c-ab">y</span>']},
+    {say:'Domínio: o conjunto de onde as setas saem. Aqui é todo o A.',
+     add:['D = A = {1, 2, 3}']},
+    {say:'Contradomínio: o conjunto onde as setas podem chegar. Aqui é todo o B.',
+     add:['CD = B = {2, 4, 5, 6}']},
+    {say:'Imagem: só os elementos de B que realmente recebem seta. O 5 não recebe.',
+     add:['Im = {2, 4, 6}']},
+    {say:'Se um x sai com duas setas, não é função. Aqui o 2 aponta para 4 e para 5.',
+     add:['T:Cuidado','2 → 4 e 2 → 5: <span class="c-alt">não é função</span>']}
+  ]});
+
+SCENES.push({id:'afim',grp:'fun',tab:'Função afim',sub:'Função afim: f(x) = ax + b',
+  build(){
+    plane();
+    const O0=Pl(0,0),R0=Pl(1,0),T3=Pl(3,0),T4=Pl(3,4);
+    path(lineD(Pl(5,0),Pl(-5,0)),8,'glow2',11);
+    path(lineD(Pl(-1.5,-5),Pl(3.5,5)),0,'fn');
+    hot(Pl(0,-2),2);txt([Pl(0,-2)[0]-48,Pl(0,-2)[1]-12],'(0, −2)',2,'c-arc sm');
+    path('M '+M(Pl(0,-2))+' L '+M(Pl(1,-2))+' L '+M(Pl(1,0)),3,'ln-ab2',4);
+    txt([Pl(.5,-2)[0],Pl(.5,-2)[1]+15],'+1',3,'c-ab sm',4);txt([Pl(1,-1)[0]+20,Pl(1,-1)[1]],'+2',3,'c-ab sm',4);
+    /* tangente: triângulo com Δx = 2 e Δy = 4 */
+    path('M '+M(R0)+' L '+M(T3)+' L '+M(T4),4,'ln-ab2',6);
+    const th=angleAt(R0,T3,T4,30);
+    path(th.d,4,'ln-ang',6);txt(at(R0,th.mid,50),'θ',4,'c-ang',6);
+    txt([Pl(2,0)[0]+4,Pl(2,0)[1]+30],'Δx = 2',4,'c-ab sm',6);txt([T4[0]+2,Pl(3,2)[1]],'Δy = 4',4,'c-ab sm',6);
+    hot(R0,5,6);hot(T4,5,6);
+    txt([R0[0]-34,R0[1]-14],'A (1, 0)',5,'c-arc sm',6);txt([T4[0]-40,T4[1]-10],'B (3, 4)',5,'c-arc sm',6);
+    /* ângulos notáveis da reta */
+    curve(x=>x,-4,4.9,6,'fn2',7);
+    path(angleAt(O0,Pl(1,0),Pl(1,1),30).d,6,'ln-ang',7);txt(at(O0,22.5,52),'45°',6,'c-ang sm',7);
+    curve(x=>-x,-4.9,4.9,7,'fn2',8);
+    path(arcD(0,135,32,O0[0],O0[1]),7,'ln-ang',8);txt(at(O0,70,50),'135°',7,'c-ang sm',8);
+    hot(R0,10);txt([R0[0]-30,R0[1]-20],'x = 1',10,'c-res sm');
+    curve(x=>-x+3,-2,5,12,'fn2');
+    txt(Pl(0.9,4.3),'a < 0',12,'c-arc sm');
+    txt(Pl(3.3,2.2),'a > 0',12,'sm');
+  },
+  steps:[
+    {say:'A função afim tem como gráfico sempre uma reta. A forma geral é f(x) = ax + b.',
+     add:['f(x) = '+cA('a')+'x + '+cB('b'),'T:Exemplo','f(x) = 2x − 2']},
+    {say:'Primeiro passo de toda resolução: achar os coeficientes. Compare a função com a forma geral ax + b. O número que multiplica x é o a. O número sozinho é o b, com o sinal dele.',
+     add:['T:Passo 1 · coeficientes',cA('a')+'x + '+cB('b')+'  ↔  '+cA('2')+'x '+cB('− 2'),cA('a')+' = 2','<span class="c-arc">b</span> = −2']},
+    {say:'O coeficiente b diz onde a reta corta o eixo y. Quando x = 0, f(0) = b. Aqui o ponto é (0, −2).',
+     add:['f(0) = '+cB('b')+' = −2','ponto (0, −2)']},
+    {say:'O coeficiente a é a inclinação: andando 1 para a direita, a reta sobe 2.',
+     add:[cA('a')+' = 2 → sobe 2 a cada 1']},
+    {say:'O coeficiente a também é a tangente do ângulo θ que a reta faz com o eixo x. Monte um triângulo retângulo: Δx é o cateto adjacente e Δy é o cateto oposto.',
+     add:['T:Calculando o a por tangente',cA('a')+' = tg θ = '+F('cateto oposto','cateto adjacente')+' = '+F('Δy','Δx'),cA('a')+' = '+F('4','2')+' = <span class="c-res">2</span>']},
+    {say:'Na prática, escolha dois pontos da reta, A e B. O a é a diferença dos y dividida pela diferença dos x. Cuidado com a ordem: use B menos A nos dois.',
+     add:['T:Com dois pontos',cA('a')+' = '+F('y<sub>B</sub> − y<sub>A</sub>','x<sub>B</sub> − x<sub>A</sub>'),cA('a')+' = '+F('4 − 0','3 − 1')+' = <span class="c-res">2</span>']},
+    {say:'Se você conhece o ângulo, é só usar a tabela de tangentes. Uma reta de 45° com o eixo x tem a = tg 45° = 1.',
+     add:['T:Calculando o a pelo ângulo','θ = 45° → '+cA('a')+' = tg 45° = <span class="c-res">1</span>','θ = 30° → '+cA('a')+' = '+F('√3','3'),'θ = 60° → '+cA('a')+' = √3']},
+    {say:'Retas que descem têm ângulo obtuso, medido a partir do eixo x no sentido anti-horário. A tangente fica negativa: com θ = 135°, a = tg 135° = −1.',
+     add:['θ = 135° → '+cA('a')+' = tg 135° = <span class="c-res">−1</span>','θ &lt; 90° → a &gt; 0','θ &gt; 90° → a &lt; 0']},
+    {say:'Agora o zero da função, também chamado de raiz: é o x em que a reta corta o eixo x, onde f(x) = 0.',
+     add:['T:Raiz · Passo 2','f(x) = 0']},
+    {say:'Substitua f(x) pela fórmula e iguale a zero.',
+     add:['2x − 2 = 0']},
+    {say:'Isole o x: some 2 nos dois lados e depois divida por 2. A raiz é x = 1.',
+     add:['2x = 2','x = '+F('2','2')+' = <span class="c-res">1</span>','fórmula pronta: x = '+F('−'+cB('b'),cA('a'))]},
+    {say:'Confira: troque x por 1 na função. Se der zero, a raiz está certa.',
+     add:['T:Conferindo','f(1) = 2 · 1 − 2 = <span class="c-res">0</span> ✓']},
+    {say:'O sinal de a diz se a reta sobe ou desce: a positivo, a reta sobe (crescente); a negativo, desce (decrescente).',
+     add:['a &gt; 0 → <span class="c-red">crescente</span>','a &lt; 0 → <span class="c-arc">decrescente</span>']}
+  ]});
+
+SCENES.push({id:'quadratica',grp:'fun',tab:'Função quadrática',sub:'Função quadrática: f(x) = ax² + bx + c',
+  build(){
+    plane();
+    path(lineD(Pl(5,0),Pl(-5,0)),4,'glow2',8);
+    curve(x=>x*x-2*x-3,-2,4,0,'fn',9);curve(x=>x*x-2*x-3,-2,4,10,'fn');
+    txt(Pl(-3.4,3.2),'a > 0',2,'c-ab',3);txt(Pl(-3.4,2.4),'∪',2,'c-ab big',3);
+    [[3,9],[10,99]].forEach(([s0,e0])=>{
+      hot(Pl(0,-3),s0,e0);txt([Pl(0,-3)[0]-48,Pl(0,-3)[1]+8],'(0, −3)',s0,'c-cd sm',e0);
+    });
+    [[7,9],[10,99]].forEach(([s0,e0])=>{
+      hot(Pl(-1,0),s0,e0);hot(Pl(3,0),s0,e0);
+      txt([Pl(-1,0)[0]-22,Pl(-1,0)[1]-16],'−1',s0,'c-res sm',e0);txt([Pl(3,0)[0]+22,Pl(3,0)[1]-16],'3',s0,'c-res sm',e0);
+    });
+    curve(x=>x*x-2*x+3,-1,3,9,'fn2',10);
+    txt(Pl(1,0.9),'não toca o eixo x',9,'c-arc sm',10);
+    mk('path',{d:lineD(Pl(1,5),Pl(1,-5))},10,99,'dash');
+    hot(Pl(1,-4),11);txt([Pl(1,-4)[0]+50,Pl(1,-4)[1]+4],'V (1, −4)',11,'c-ab sm');
+  },
+  steps:[
+    {say:'A função quadrática tem como gráfico uma parábola. A forma geral é f(x) = ax² + bx + c.',
+     add:['f(x) = '+cA('a')+' x<sup>2</sup> + '+cB('b')+' x + '+cC('c'),'T:Exemplo','f(x) = x<sup>2</sup> − 2x − 3']},
+    {say:'Primeiro passo de toda resolução: achar os coeficientes a, b e c. Compare termo a termo e leve o sinal junto de cada número. Se x² não tem número na frente, o a vale 1.',
+     add:['T:Passo 1 · coeficientes',cA('1')+' x<sup>2</sup> '+cB('− 2')+' x '+cC('− 3'),cA('a')+' = 1','<span class="c-arc">b</span> = −2','<span class="c-cd">c</span> = −3']},
+    {say:'O sinal de a dá a concavidade. Aqui a = 1, positivo: a boca da parábola abre para cima.',
+     add:['a &gt; 0 → boca para <span class="c-ang">cima</span> ∪','a &lt; 0 → boca para <span class="c-ang">baixo</span> ∩']},
+    {say:'O coeficiente c é onde a parábola corta o eixo y: quando x = 0, f(0) = c. Aqui c = −3.',
+     add:['f(0) = '+cC('c')+' = −3','ponto (0, −3)']},
+    {say:'Agora as raízes: são os x em que a parábola toca o eixo x, ou seja, f(x) = 0. Passo 1: iguale a função a zero.',
+     add:['T:Raízes · Passo 1 · igualar a zero','f(x) = 0','x<sup>2</sup> − 2x − 3 = 0']},
+    {say:'Passo 2: calcule o delta com a fórmula. Cuidado com os sinais: (−2)² vale +4 e −4 · 1 · (−3) vale +12.',
+     add:['T:Passo 2 · calcular Δ','Δ = '+cB('b')+'<sup>2</sup> − 4 · '+cA('a')+' · '+cC('c'),'Δ = ('+cB('−2')+')<sup>2</sup> − 4 · '+cA('1')+' · ('+cC('−3')+')','Δ = 4 + 12','Δ = <span class="c-res">16</span>']},
+    {say:'Passo 3: coloque a, b e delta na fórmula de Bhaskara. O −b vira −(−2), que é +2. A raiz de 16 é 4.',
+     add:['T:Passo 3 · fórmula de Bhaskara','x = '+F('−'+cB('b')+' ± √Δ','2'+cA('a')),'x = '+F('−('+cB('−2')+') ± √16','2 · '+cA('1')),'x = '+F('2 ± 4','2')]},
+    {say:'Passo 4: faça duas contas, uma com o sinal de mais e outra com o de menos. Essas são as duas raízes.',
+     add:['T:Passo 4 · as duas raízes','x′ = '+F('2 + 4','2')+' = '+F('6','2')+' = <span class="c-res">3</span>','x″ = '+F('2 − 4','2')+' = '+F('−2','2')+' = <span class="c-res">−1</span>']},
+    {say:'O valor de delta mostra quantas raízes reais existem. Se Δ é positivo, são duas. Se é zero, uma só. Se é negativo, a raiz quadrada de Δ não é um número real, e então não existem raízes reais.',
+     add:['T:Quantas raízes?','Δ &gt; 0 → <span class="c-res">duas raízes reais</span>','Δ = 0 → uma raiz real (só toca o eixo)','Δ &lt; 0 → √Δ <span class="c-alt">não é real</span>: nenhuma raiz real']},
+    {say:'Exemplo com Δ negativo: f(x) = x² − 2x + 3. Os coeficientes são a = 1, b = −2 e c = 3. Nenhum número real elevado ao quadrado dá −8, então a raiz não é real e a parábola não toca o eixo x.',
+     add:['T:Exemplo com Δ &lt; 0','x<sup>2</sup> − 2x + 3 = 0 → a = 1, b = −2, c = 3','Δ = (−2)<sup>2</sup> − 4 · 1 · 3 = 4 − 12 = <span class="c-alt">−8</span>','x = '+F('2 ± √(−8)','2'),'√(−8) <span class="c-alt">não é real</span>','<span class="c-alt">sem raízes reais</span>: a parábola não corta o eixo x']},
+    {say:'Voltando ao exemplo principal. Vértice, passo 1: o x do vértice fica no meio das raízes. Use x do vértice = −b dividido por 2a.',
+     add:['T:Vértice · Passo 1','x<sub>v</sub> = '+F('−'+cB('b'),'2'+cA('a')),'x<sub>v</sub> = '+F('−('+cB('−2')+')','2 · '+cA('1'))+' = '+F('2','2')+' = <span class="c-res">1</span>']},
+    {say:'Passo 2: o y do vértice é −delta dividido por 4a. O vértice é o ponto mais baixo da parábola.',
+     add:['T:Passo 2','y<sub>v</sub> = '+F('−Δ','4'+cA('a')),'y<sub>v</sub> = '+F('−16','4 · '+cA('1'))+' = <span class="c-res">−4</span>','V = <span class="c-ab">(1, −4)</span>']}
+  ]});
+
+/* ===== ângulos excêntricos ===== */
+const inter=(a,b,c,e)=>{
+  const t=((a[0]-c[0])*(c[1]-e[1])-(a[1]-c[1])*(c[0]-e[0]))/((a[0]-b[0])*(c[1]-e[1])-(a[1]-b[1])*(c[0]-e[0]));
+  return [a[0]+t*(b[0]-a[0]),a[1]+t*(b[1]-a[1])];
+};
+SCENES.push({id:'interno',tab:'Ângulo interno',sub:'Ângulo excêntrico interno',
+  build(){
+    const A=P(100),B=P(250),C=P(20),D=P(200),Pp=inter(A,B,C,D);
+    base();
+    seg(A,B,0,'ln');seg(C,D,0,'ln');
+    dot(A,0);dot(B,0);dot(C,0);dot(D,0);dot(Pp,0);
+    [[100,'A'],[250,'B'],[20,'C'],[200,'D']].forEach(([g,t])=>txt(P(g,172),t,0));
+    txt(at(Pp,-62,16),'P',0);
+    const a1=angleAt(Pp,A,C,26);
+    path(a1.d,1,'ln-ang');txt(at(Pp,a1.mid,46),'α',1,'c-ang',5);txt(at(Pp,a1.mid,46),'65°',5,'c-res');
+    path(arcD(20,100,150),2,'ln-arc');txt(P(60,128),'80°',2,'c-arc');
+    const a2=angleAt(Pp,B,D,26);
+    path(a2.d,3,'ln-ang');
+    path(arcD(200,250,150),3,'ln-cd');txt(P(225,128),'50°',3,'c-cd');
+  },
+  steps:[
+    {say:'Duas cordas, AB e CD, se cruzam no ponto P, dentro da circunferência.'},
+    {say:'O ângulo α, de vértice P, está dentro do círculo. Ele se chama ângulo excêntrico interno.',
+     add:['<span class="c-ang">α</span> = ângulo <span class="c-ang">excêntrico interno</span>']},
+    {say:'O ângulo α enxerga o arco AC, de 80°.',
+     add:['<span class="c-arc">arco AC</span> = 80°']},
+    {say:'O ângulo oposto pelo vértice enxerga o arco BD, de 50°. Esse arco também conta.',
+     add:['<span class="c-cd">arco BD</span> = 50°']},
+    {say:'Regra: o ângulo é a soma dos dois arcos dividida por 2.',
+     add:['<span class="c-ang">α</span> = '+F('<span class="c-arc">arco AC</span> + <span class="c-cd">arco BD</span>','2')]},
+    {say:'Exemplo: arcos de 80° e 50°. Some e divida por 2.',
+     add:['T:Exemplo','<span class="c-ang">α</span> = '+F('80° + 50°','2'),'<span class="c-ang">α</span> = '+F('130°','2')+' = <span class="c-res">65°</span>']}
+  ]});
+
+SCENES.push({id:'externo-ang',tab:'Ângulo externo',sub:'Ângulo excêntrico externo',
+  build(){
+    const Q=g=>[125+95*Math.cos(rad(g)),200-95*Math.sin(rad(g))];
+    const B=Q(20),A=Q(130),C=Q(-20),D=Q(230),Pp=inter(B,A,C,D);
+    mk('circle',{cx:125,cy:200,r:95},0,99,'circ');
+    seg(Pp,A,0,'ln');seg(Pp,D,0,'ln');
+    dot(A,0);dot(B,0);dot(C,0);dot(D,0);dot(Pp,0);
+    const lab=(g,t)=>txt([125+117*Math.cos(rad(g)),200-117*Math.sin(rad(g))],t,0);
+    lab(130,'A');lab(20,'B');lab(-20,'C');lab(230,'D');
+    txt(at(Pp,90,18),'P',0);
+    const a1=angleAt(Pp,B,C,34);
+    path(a1.d,1,'ln-ang');txt([Pp[0]-48,Pp[1]-1],'α',1,'c-ang',5);
+    txt([Pp[0]+34,Pp[1]],'30°',5,'c-res');
+    path(arcD(130,230,95,125,200),2,'ln-arc');txt([125-62,200],'100°',2,'c-arc');
+    path(arcD(-20,20,95,125,200),3,'ln-cd');txt([125+62,200-24],'40°',3,'c-cd sm');
+  },
+  steps:[
+    {say:'Duas retas saem do ponto P, fora da circunferência, e cortam o círculo: uma em B e A, outra em C e D.'},
+    {say:'O ângulo α, de vértice P, está fora do círculo. Ele se chama ângulo excêntrico externo.',
+     add:['<span class="c-ang">α</span> = ângulo <span class="c-ang">excêntrico externo</span>']},
+    {say:'Arco maior: é o arco AD, o mais afastado de P. Ele mede 100°.',
+     add:['<span class="c-arc">arco maior AD</span> = 100°']},
+    {say:'Arco menor: é o arco BC, o mais próximo de P. Ele mede 40°.',
+     add:['<span class="c-cd">arco menor BC</span> = 40°']},
+    {say:'Regra: o ângulo é o arco maior menos o arco menor, dividido por 2. Aqui é subtração, diferente do ângulo interno.',
+     add:['<span class="c-ang">α</span> = '+F('<span class="c-arc">arco maior</span> − <span class="c-cd">arco menor</span>','2')]},
+    {say:'Exemplo: arcos de 100° e 40°. Subtraia e divida por 2.',
+     add:['T:Exemplo','<span class="c-ang">α</span> = '+F('100° − 40°','2'),'<span class="c-ang">α</span> = '+F('60°','2')+' = <span class="c-res">30°</span>']}
+  ]});
+
+/*MORE4*/
+let scene=0,step=0;
+const tabsEl=$('tabs'),dotsEl=$('dots'),sayEl=$('say'),linesEl=$('lines'),nextEl=$('next'),prevEl=$('prev'),extraEl=$('extra');
+SCENES.forEach(S=>{S.grp=S.grp||'circ';});
+SCENES.sort((a,b)=>GROUPS.findIndex(g=>g.id===a.grp)-GROUPS.findIndex(g=>g.id===b.grp));
+const groupsEl=$('groups'),titleEl=$('title');
+let navGroup=null;
+function renderNav(){
+  const g=SCENES[scene].grp;
+  if(g!==navGroup){
+    navGroup=g;groupsEl.replaceChildren();tabsEl.replaceChildren();
+    GROUPS.forEach(G=>{
+      const b=document.createElement('button');b.className='tab';b.textContent=G.name;b.dataset.g=G.id;
+      b.addEventListener('click',()=>go(SCENES.findIndex(S=>S.grp===G.id)));groupsEl.appendChild(b);
+    });
+    SCENES.forEach((S,i)=>{
+      if(S.grp!==g)return;
+      const b=document.createElement('button');b.className='tab';b.textContent=S.tab;b.dataset.i=i;
+      b.addEventListener('click',()=>go(i));tabsEl.appendChild(b);
+    });
+    titleEl.textContent=GROUPS.find(G=>G.id===g).title;
+  }
+  [...groupsEl.children].forEach(b=>b.setAttribute('aria-current',String(b.dataset.g===g)));
+  [...tabsEl.children].forEach(b=>b.setAttribute('aria-current',String(+b.dataset.i===scene)));
+  [groupsEl,tabsEl].forEach(r=>{
+    const cur=r.querySelector('[aria-current="true"]');
+    if(cur&&cur.scrollIntoView)cur.scrollIntoView({inline:'center',block:'nearest'});
+  });
+}
+
+function go(i,last){
+  scene=i;const S=SCENES[i];step=last?S.steps.length-1:0;
+  SC.replaceChildren();S.build();
+  $('sub').textContent=S.sub;
+  linesEl.replaceChildren();
+  S.steps.forEach((st,k)=>(st.add||[]).forEach(h=>{
+    const d=document.createElement('div'),tag=h.startsWith('T:');
+    d.className=tag?'tag':'line';d.innerHTML=tag?h.slice(2):h;d.dataset.k=k;d.hidden=true;linesEl.appendChild(d);
+  }));
+  dotsEl.replaceChildren();
+  S.steps.forEach((_,k)=>{
+    const b=document.createElement('button');b.className='dot';b.setAttribute('aria-label','Passo '+(k+1));
+    b.addEventListener('click',()=>{step=k;apply();});dotsEl.appendChild(b);
+  });
+  renderNav();
+  if(location.hash!=='#'+S.id)location.hash=S.id;
+  requestAnimationFrame(()=>requestAnimationFrame(apply));
+}
+
+function apply(){
+  const S=SCENES[scene];
+  SC.querySelectorAll('.el').forEach(el=>el.classList.toggle('on',step>=+el.dataset.s&&step<+el.dataset.e));
+  sayEl.textContent=S.steps[step].say;
+  sayEl.style.animation='none';void sayEl.offsetWidth;sayEl.style.animation='';
+  linesEl.querySelectorAll('[data-k]').forEach(d=>{d.hidden=+d.dataset.k>step;});
+  [...dotsEl.children].forEach((b,k)=>b.setAttribute('aria-current',String(k===step)));
+  const lastStep=step===S.steps.length-1,lastScene=scene===SCENES.length-1;
+  nextEl.textContent=!lastStep?'Próximo →':(lastScene?'Recomeçar ↺':'Próxima cena →');
+  prevEl.disabled=scene===0&&step===0;
+  extraEl.hidden=!(S.extra&&S.extra.show(step));
+  if(S.extra)extraEl.textContent=S.extra.label;
+}
+
+function next(){
+  const S=SCENES[scene];
+  if(step<S.steps.length-1){step++;apply();}
+  else go(scene<SCENES.length-1?scene+1:0);
+}
+function prev(){
+  if(step>0){step--;apply();}
+  else if(scene>0)go(scene-1,true);
+}
+nextEl.addEventListener('click',next);
+prevEl.addEventListener('click',prev);
+extraEl.addEventListener('click',()=>{const x=SCENES[scene].extra;if(x)x.click();});
+document.addEventListener('keydown',e=>{
+  if(e.key==='ArrowRight'){next();}else if(e.key==='ArrowLeft'){prev();}
+});
+window.addEventListener('hashchange',()=>{
+  const i=SCENES.findIndex(S=>'#'+S.id===location.hash);
+  if(i>=0&&i!==scene)go(i);
+});
+const i0=SCENES.findIndex(S=>'#'+S.id===location.hash);
+go(i0>=0?i0:0);
+</script>
